@@ -801,7 +801,7 @@ export default function AdminPortal() {
                   {editingStudent === 'new' ? 'Register New Student Profile' : `Modify Profile: ${editingStudent.name}`}
                 </h3>
 
-                <form onSubmit={handleStudentFormSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+                <form onSubmit={handleStudentFormSubmit} className="responsive-form-grid-three">
                   <div className="form-group">
                     <label>Full Name</label>
                     <input
@@ -1010,7 +1010,7 @@ export default function AdminPortal() {
                   {editingTeacher === 'new' ? 'Register New Class Teacher Profile' : `Modify Profile: ${editingTeacher.name}`}
                 </h3>
 
-                <form onSubmit={handleTeacherFormSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+                <form onSubmit={handleTeacherFormSubmit} className="responsive-form-grid-three">
                   <div className="form-group">
                     <label>Full Name</label>
                     <input
@@ -1246,7 +1246,7 @@ export default function AdminPortal() {
                   {editingSubject === 'new' ? 'Register New Subject' : `Modify Subject: ${editingSubject.name}`}
                 </h3>
 
-                <form onSubmit={handleSubjectFormSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                <form onSubmit={handleSubjectFormSubmit} className="responsive-grid-two-cols" style={{ gap: '1rem' }}>
                   {/* Subject Name Input */}
 
                   <div className="form-group">
@@ -1327,7 +1327,7 @@ export default function AdminPortal() {
                   {editingClass === 'new' ? 'Register New Class' : `Modify Class: ${editingClass.name}`}
                 </h3>
 
-                <form onSubmit={handleClassFormSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem' }}>
+                <form onSubmit={handleClassFormSubmit} className="responsive-grid-two-cols" style={{ gap: '1.25rem' }}>
                   <div className="form-group">
                     <label>Base Class / Grade</label>
                     <input
@@ -1468,7 +1468,7 @@ export default function AdminPortal() {
               <p style={{ color: 'var(--text-secondary)' }}>View school class structures, subject registers, and teacher assignments.</p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '2rem' }}>
+            <div className="responsive-grid-split">
               {/* Classes structural list */}
               <div>
                 <h3 style={{ fontSize: '1.1rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>Class structures</h3>
@@ -1540,11 +1540,8 @@ export default function AdminPortal() {
             </div>
 
             {/* Approval Class/Term Filters */}
-            <div className="glass-panel" style={{
+            <div className="glass-panel responsive-form-grid-three" style={{
               padding: '1.25rem',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '1rem',
               marginBottom: '2rem',
               border: '1px solid var(--border)'
             }}>
@@ -1709,7 +1706,7 @@ export default function AdminPortal() {
             <div className="glass-panel" style={{ padding: '1.5rem', border: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {editedScale.map((rule, idx) => (
-                  <div key={rule.grade} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 2fr 1.5fr', gap: '1rem', alignItems: 'center' }}>
+                  <div key={rule.grade} className="grading-scale-row">
                     <div>
                       <span style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '1.1rem' }}>Grade {rule.grade}</span>
                     </div>
@@ -1781,7 +1778,7 @@ export default function AdminPortal() {
               <p style={{ color: 'var(--text-secondary)' }}>Chronological history ledger of result submissions, modifications, and publications.</p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem' }}>
+            <div className="responsive-grid-split">
               {/* Audit timelines */}
               <div className="glass-panel" style={{ padding: '1.5rem', maxHeight: '600px', overflowY: 'auto' }}>
                 <div className="audit-timeline">
@@ -1844,7 +1841,7 @@ export default function AdminPortal() {
               <p style={{ color: 'var(--text-secondary)' }}>Manage school branding, active term records, registration locks, and portal access variables.</p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
+            <div className="settings-grid-layout">
               {/* Branding Section */}
               <div className="glass-panel" style={{ padding: '1.75rem', border: '1px solid var(--border)' }}>
                 <h3 style={{ fontSize: '1.15rem', marginBottom: '1.25rem', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

@@ -1515,7 +1515,7 @@ h1, h2, h3, h4, h5, h6 {
   background: transparent;
   border: none;
   cursor: pointer;
-  color: var(--text-primary);
+  color: #ffffff;
 }
 
 /* Mobile responsive styles */
@@ -1709,6 +1709,176 @@ h1, h2, h3, h4, h5, h6 {
   
   .login-portal-form-side {
     padding: 2.5rem 1.5rem;
+  }
+}
+
+/* Mobile Responsive Helper Classes */
+.responsive-grid-two-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.settings-grid-layout {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.teacher-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+  margin-bottom: 2rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background-color: var(--bg-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.teacher-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+@media (max-width: 900px) {
+  .settings-grid-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .responsive-grid-two-cols {
+    grid-template-columns: 1fr;
+  }
+  .table-container, .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+  .custom-table, .school-grid-table {
+    min-width: 650px;
+  }
+}
+
+@media (max-width: 600px) {
+  .teacher-header-bar {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+    text-align: center;
+    padding: 1.25rem 1rem;
+  }
+  .teacher-header-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+  .report-card {
+    padding: 1.25rem !important;
+    border-width: 2px !important;
+    border-radius: 10px !important;
+  }
+  .report-card::before {
+    top: 4px !important;
+    left: 4px !important;
+    right: 4px !important;
+    bottom: 4px !important;
+    border-radius: 8px !important;
+  }
+  .report-header {
+    flex-direction: column;
+    gap: 0.75rem;
+    text-align: center;
+  }
+  .report-logo {
+    display: none;
+  }
+  .report-logo:first-child {
+    display: flex;
+  }
+  .report-school-details h1 {
+    font-size: 1.5rem !important;
+  }
+}
+
+/* Responsive Form and Split Grid Helpers */
+.responsive-form-grid-three {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.responsive-grid-split {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 2rem;
+}
+
+.grading-scale-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 2fr 1.5fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .responsive-form-grid-three {
+    grid-template-columns: 1fr;
+  }
+  
+  .grading-scale-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .responsive-grid-split {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+/* Remarks Table Mobile Conversions */
+@media (max-width: 600px) {
+  .remarks-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .remarks-table, 
+  .remarks-table tbody, 
+  .remarks-table tr, 
+  .remarks-table td, 
+  .remarks-table th {
+    display: block;
+    width: 100% !important;
+    box-sizing: border-box;
+  }
+  
+  .remarks-table tr {
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .remarks-table tr:last-child {
+    border-bottom: none;
+  }
+  
+  .remarks-table td {
+    padding: 8px 12px;
+  }
+  
+  .remarks-table .detail-name-col,
+  .remarks-table .detail-sig-label-col,
+  .remarks-table .detail-sig-val-col,
+  .remarks-table .detail-date-col {
+    text-align: left !important;
+    width: 100% !important;
+    padding: 4px 12px !important;
   }
 }
 

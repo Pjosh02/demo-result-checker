@@ -285,19 +285,9 @@ export default function TeacherPortal() {
   const classStudents = students.filter(s => s.classId === selectedClassId && s.active);
 
   return (
-    <div className="dashboard-content" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="dashboard-content" style={{ maxWidth: '1200px', margin: '0 auto' }}>
       {/* Top Header Bar for Teachers */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0.75rem 1.5rem',
-        marginBottom: '2rem',
-        borderRadius: 'var(--radius-md)',
-        border: '1px solid var(--border)',
-        backgroundColor: 'var(--bg-secondary)',
-        boxShadow: 'var(--shadow-sm)'
-      }}>
+      <div className="teacher-header-bar">
         {/* Left Side: Brand branding logo and name */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <img src={schoolLogo} alt="Manna Logo" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
@@ -307,7 +297,7 @@ export default function TeacherPortal() {
         </div>
 
         {/* Right Side: Account details and actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+        <div className="teacher-header-actions">
           {/* Theme switcher */}
           <button 
             type="button" 
@@ -383,11 +373,8 @@ export default function TeacherPortal() {
       )}
 
       {/* Dynamic Filters Bar */}
-      <div className="glass-panel" style={{
+      <div className="glass-panel responsive-form-grid-three" style={{
         padding: '1.5rem',
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: '1rem',
         marginBottom: '2rem',
         border: '1px solid var(--border)'
       }}>
@@ -733,7 +720,7 @@ export default function TeacherPortal() {
           </div>
 
           {/* Section 1: Effective Development & Psychomotor Skills (Matches screenshot) */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+          <div className="responsive-grid-two-cols" style={{ gap: '1.5rem' }}>
             
             {/* Effective Development Panel */}
             <div className="glass-panel" style={{ padding: '1.5rem', border: '1px solid var(--border)' }}>
@@ -852,7 +839,7 @@ export default function TeacherPortal() {
               Remarks & Signatures
             </h3>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+            <div className="responsive-grid-two-cols" style={{ gap: '2rem' }}>
               
               {/* Class Teacher Column */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', backgroundColor: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
@@ -871,7 +858,7 @@ export default function TeacherPortal() {
                   />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div className="responsive-grid-two-cols" style={{ gap: '0.75rem' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Teacher Name</label>
                     <input
@@ -971,7 +958,7 @@ export default function TeacherPortal() {
                   />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div className="responsive-grid-two-cols" style={{ gap: '0.75rem' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Principal Name</label>
                     <input
@@ -1099,7 +1086,7 @@ export default function TeacherPortal() {
               Modify Student Profile: {editingStudentProfile.name}
             </h3>
 
-            <form onSubmit={handleProfileFormSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <form onSubmit={handleProfileFormSubmit} className="responsive-grid-two-cols" style={{ gap: '1rem' }}>
               <div className="form-group">
                 <label>Full Name</label>
                 <input
