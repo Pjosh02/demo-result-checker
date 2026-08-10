@@ -1183,6 +1183,11 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Printing styles - Force standard printing formats */
 @media print {
+  @page {
+    size: portrait;
+    margin: 8mm 10mm 8mm 10mm;
+  }
+
   body {
     background-color: #ffffff !important;
     color: #000000 !important;
@@ -1227,13 +1232,15 @@ h1, h2, h3, h4, h5, h6 {
   }
   
   .report-card {
-    border: 2px solid #000000 !important;
+    border: 1px solid #000000 !important;
     box-shadow: none !important;
-    padding: 2.5rem !important;
+    padding: 1.25rem !important;
     background: #ffffff !important;
     margin: 0 !important;
     width: 100% !important;
-    page-break-after: always; /* Enable clean page spacing for multiple prints */
+    box-sizing: border-box !important;
+    page-break-inside: avoid !important;
+    page-break-after: always !important; /* Force page break after each card */
   }
 
   .report-card::after {
@@ -1242,12 +1249,135 @@ h1, h2, h3, h4, h5, h6 {
     print-color-adjust: exact !important;
   }
   
+  .report-header {
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .report-header h1 {
+    font-size: 1.2rem !important;
+    margin: 0 !important;
+  }
+  
+  .report-header .motto {
+    font-size: 0.75rem !important;
+    margin: 0 !important;
+  }
+  
+  .report-header .meta {
+    font-size: 0.65rem !important;
+    margin: 0 !important;
+  }
+  
+  .report-header img {
+    width: 50px !important;
+    height: 50px !important;
+  }
+  
+  .report-identity {
+    margin-bottom: 0.5rem !important;
+    padding: 0.4rem !important;
+    gap: 0.5rem !important;
+  }
+  
+  .student-photo-frame {
+    width: 60px !important;
+    height: 60px !important;
+  }
+  
+  .identity-details-grid {
+    gap: 0.2rem 0.5rem !important;
+  }
+  
+  .identity-field .label {
+    font-size: 0.65rem !important;
+  }
+  
+  .identity-field .value {
+    font-size: 0.7rem !important;
+  }
+  
+  .section-banner {
+    margin: 0.4rem 0 !important;
+    padding: 0.15rem !important;
+    font-size: 0.75rem !important;
+  }
+  
+  .report-stats-strip {
+    margin-bottom: 0.4rem !important;
+    padding: 0.2rem !important;
+  }
+  
+  .stat-strip-item {
+    font-size: 0.7rem !important;
+  }
+  
   .school-grid-table th {
     background-color: #f1f5f9 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    padding: 0.2rem 0.3rem !important;
+    font-size: 0.7rem !important;
   }
-
+  
+  .school-grid-table td {
+    padding: 0.2rem 0.3rem !important;
+    font-size: 0.7rem !important;
+  }
+  
+  .school-grid-table td.bold-highlight {
+    font-size: 0.75rem !important;
+  }
+  
+  .grade-pill-badge {
+    padding: 0.1rem 0.25rem !important;
+    font-size: 0.65rem !important;
+  }
+  
+  .traits-group h3 {
+    font-size: 0.7rem !important;
+    margin-bottom: 0.2rem !important;
+  }
+  
+  .trait-row {
+    padding: 0.1rem 0 !important;
+    font-size: 0.65rem !important;
+  }
+  
+  .trait-number-rating {
+    font-size: 0.65rem !important;
+  }
+  
+  .remarks-table-wrapper {
+    margin-top: 0.4rem !important;
+  }
+  
+  .remarks-table th {
+    font-size: 0.7rem !important;
+    padding: 0.2rem !important;
+  }
+  
+  .remarks-table td {
+    font-size: 0.7rem !important;
+    padding: 0.2rem 0.4rem !important;
+  }
+  
+  .remarks-table .sig-container {
+    height: 20px !important;
+  }
+  
+  .remarks-table .sig-container img {
+    max-height: 20px !important;
+  }
+  
+  .remarks-table .sig-fallback {
+    font-size: 0.65rem !important;
+  }
+  
+  .certificate-bottom-bar {
+    margin-top: 0.4rem !important;
+    font-size: 0.6rem !important;
+  }
+  
   .trait-dot.filled {
     background-color: #10b981 !important;
     -webkit-print-color-adjust: exact !important;
