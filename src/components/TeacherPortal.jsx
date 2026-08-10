@@ -15,7 +15,8 @@ export default function TeacherPortal() {
     setCurrentRole,
     theme,
     toggleTheme,
-    schoolLogo
+    schoolLogo,
+    schoolName
   } = useContext(AppContext);
 
   // Active Authenticated Teacher
@@ -290,7 +291,7 @@ export default function TeacherPortal() {
       <div className="teacher-header-bar">
         {/* Left Side: Brand branding logo and name */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <img src={schoolLogo} alt="Manna Logo" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
+          <img src={schoolLogo} alt={`${schoolName} Logo`} style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
           <div>
             <span style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '1.1rem' }}>Teacher Portal</span>
           </div>

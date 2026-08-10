@@ -186,7 +186,7 @@ export default function LoginPortal() {
   };
 
   const nameParts = schoolName.split(' ');
-  const firstWord = nameParts[0] || 'MANNA';
+  const firstWord = nameParts[0] || 'HIGGSFIELD';
   const restOfName = nameParts.slice(1).join(' ') || 'Academy';
 
   return (
@@ -411,7 +411,7 @@ export default function LoginPortal() {
                   id="staffMail"
                   type="email"
                   className="form-control"
-                  placeholder="e.g. emily.cole@manna.edu"
+                  placeholder="e.g. emily.cole@higgsfield.edu"
                   value={staffEmail}
                   onChange={(e) => setStaffEmail(e.target.value)}
                   required

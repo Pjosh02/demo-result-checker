@@ -101,13 +101,17 @@ export const AppProvider = ({ children }) => {
   });
 
   const [adminEmail, setAdminEmail] = useState(() => {
-    return localStorage.getItem('mc_admin_email') || 'admin@manna.edu';
+    const saved = localStorage.getItem('mc_admin_email');
+    if (saved === 'admin@manna.edu') return 'admin@higgsfield.edu';
+    return saved || 'admin@higgsfield.edu';
   });
 
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
 
   const [schoolName, setSchoolName] = useState(() => {
-    return localStorage.getItem('mc_school_name') || 'Manna Academy';
+    const saved = localStorage.getItem('mc_school_name');
+    if (saved === 'Manna Academy') return 'Higgsfield Academy';
+    return saved || 'Higgsfield Academy';
   });
 
   const [schoolSubtitle, setSchoolSubtitle] = useState(() => {

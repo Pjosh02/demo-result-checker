@@ -67,7 +67,7 @@ export default function ResultReport({ customResult = null, onBack = null }) {
 
   // Simple crest logo
   const schoolLogo = (
-    <img src={ctxLogo} alt="Manna Academy Logo" style={{ width: '80px', height: '80px', objectFit: 'contain' }} />
+    <img src={ctxLogo} alt={`${schoolName} Logo`} style={{ width: '80px', height: '80px', objectFit: 'contain' }} />
   );
 
   // Position badge calculation

@@ -1,4 +1,4 @@
-// Seed data for Manna Academy Result Checker
+// Seed data for Higgsfield Academy Result Checker
 
 export const initialClasses = [
   { id: 'jss1', name: 'JSS 1', baseName: 'JSS 1', arm: '', subjects: ['math', 'eng', 'basic_sci', 'civic_edu', 'agric_sci'] },
@@ -29,10 +29,10 @@ export const defaultAvatars = [
 ];
 
 export const initialTeachers = [
-  { id: 't1', name: 'Mrs. Emily Cole', email: 'emily.cole@manna.edu', password: 'password123', assignedClass: 'jss1', subjects: ['math'], photo: defaultAvatars[0] },
-  { id: 't2', name: 'Mr. David Vance', email: 'david.vance@manna.edu', password: 'password123', assignedClass: 'sss1', subjects: ['eng'], photo: defaultAvatars[1] },
-  { id: 't3', name: 'Dr. John Okoye', email: 'john.okoye@manna.edu', password: 'password123', assignedClass: 'sss2', subjects: ['physics', 'basic_sci'], photo: defaultAvatars[2] },
-  { id: 't4', name: 'Mrs. Blessing Benson', email: 'blessing.b@manna.edu', password: 'password123', assignedClass: 'sss1', subjects: ['chemistry'], photo: defaultAvatars[3] }
+  { id: 't1', name: 'Mrs. Emily Cole', email: 'emily.cole@higgsfield.edu', password: 'password123', assignedClass: 'jss1', subjects: ['math'], photo: defaultAvatars[0] },
+  { id: 't2', name: 'Mr. David Vance', email: 'david.vance@higgsfield.edu', password: 'password123', assignedClass: 'sss1', subjects: ['eng'], photo: defaultAvatars[1] },
+  { id: 't3', name: 'Dr. John Okoye', email: 'john.okoye@higgsfield.edu', password: 'password123', assignedClass: 'sss2', subjects: ['physics', 'basic_sci'], photo: defaultAvatars[2] },
+  { id: 't4', name: 'Mrs. Blessing Benson', email: 'blessing.b@higgsfield.edu', password: 'password123', assignedClass: 'sss1', subjects: ['chemistry'], photo: defaultAvatars[3] }
 ];
 
 // Seed standard Signatures as cursive SVGs
