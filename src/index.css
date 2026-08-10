@@ -1188,7 +1188,18 @@ h1, h2, h3, h4, h5, h6 {
     color: #000000 !important;
   }
   
-  .app-container,
+  .app-container {
+    height: auto !important;
+    min-height: 0 !important;
+    display: block !important;
+  }
+  
+  main {
+    height: auto !important;
+    min-height: 0 !important;
+    display: block !important;
+  }
+
   .dashboard-grid,
   .dashboard-sidebar,
   .btn,
