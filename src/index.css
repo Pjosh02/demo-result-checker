@@ -1234,13 +1234,32 @@ h1, h2, h3, h4, h5, h6 {
   .report-card {
     border: 1px solid #000000 !important;
     box-shadow: none !important;
-    padding: 1.25rem !important;
+    padding: 1rem !important;
     background: #ffffff !important;
-    margin: 0 !important;
+    margin: 0 auto !important;
     width: 100% !important;
     box-sizing: border-box !important;
     page-break-inside: avoid !important;
     page-break-after: always !important; /* Force page break after each card */
+    zoom: 0.8 !important;
+  }
+
+  .report-body {
+    gap: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .table-wrapper {
+    margin-bottom: 0.5rem !important;
+    border-radius: 6px !important;
+  }
+
+  .traits-sidebar {
+    gap: 0.5rem !important;
+  }
+
+  .traits-group {
+    border-radius: 6px !important;
   }
 
   .report-card::after {
@@ -1349,6 +1368,7 @@ h1, h2, h3, h4, h5, h6 {
   
   .remarks-table-wrapper {
     margin-top: 0.4rem !important;
+    border-radius: 6px !important;
   }
   
   .remarks-table th {
