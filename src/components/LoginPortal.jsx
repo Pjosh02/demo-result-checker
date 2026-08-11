@@ -298,6 +298,10 @@ export default function LoginPortal() {
                           placeholder="e.g. Adegoke Samson"
                           value={studName}
                           onChange={(e) => setStudName(e.target.value)}
+                          autoComplete="name"
+                          autoCorrect="off"
+                          autoCapitalize="words"
+                          spellCheck="false"
                           required
                         />
                       </div>
@@ -306,13 +310,13 @@ export default function LoginPortal() {
                         <label htmlFor="studRoll">Roll Number</label>
                         <input
                           id="studRoll"
-                          type="number"
-                          min="0"
-                          max="5000"
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           className="form-control"
                           placeholder="e.g. 481"
                           value={studRollNo}
-                          onChange={(e) => setStudRollNo(e.target.value)}
+                          onChange={(e) => setStudRollNo(e.target.value.replace(/\D/g, ''))}
                           required
                         />
                       </div>
@@ -414,6 +418,10 @@ export default function LoginPortal() {
                   placeholder="e.g. emily.cole@higgsfield.edu"
                   value={staffEmail}
                   onChange={(e) => setStaffEmail(e.target.value)}
+                  autoComplete="email"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck="false"
                   required
                 />
               </div>
@@ -427,6 +435,10 @@ export default function LoginPortal() {
                   placeholder="••••••••"
                   value={staffPassword}
                   onChange={(e) => setStaffPassword(e.target.value)}
+                  autoComplete="current-password"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck="false"
                   required
                 />
               </div>

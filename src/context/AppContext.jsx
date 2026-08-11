@@ -236,7 +236,7 @@ export const AppProvider = ({ children }) => {
 
   // Auth Helpers
   const loginAdmin = (email, password) => {
-    if (email.toLowerCase() === adminEmail.toLowerCase() && password === adminPassword) {
+    if (email.trim().toLowerCase() === adminEmail.trim().toLowerCase() && password.trim() === adminPassword.trim()) {
       setIsAdminLoggedIn(true);
       logAction('Admin Login', 'System', 'Administrator successfully logged into dashboard.');
       return true;
@@ -419,7 +419,7 @@ export const AppProvider = ({ children }) => {
   const loginTeacher = (email, password) => {
     const found = teachers.find(
       t => t.email.trim().toLowerCase() === email.trim().toLowerCase() && 
-      (t.password || 'password123') === password.trim()
+      (t.password || 'password123').trim() === password.trim()
     );
     if (found) {
       setSelectedTeacherId(found.id);
