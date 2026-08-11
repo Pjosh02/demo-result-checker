@@ -2415,24 +2415,39 @@ export default function AdminPortal() {
                       )}
                     </div>
                     {syncBlobId && (
-                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
-                        <input
-                          type="text"
-                          readOnly
-                          value={syncBlobId}
-                          className="form-control"
-                          style={{ fontFamily: 'monospace', fontSize: '0.8rem', padding: '0.4rem 0.6rem', backgroundColor: 'var(--bg-tertiary)' }}
-                        />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.25rem' }}>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <input
+                            type="text"
+                            readOnly
+                            value={syncBlobId}
+                            className="form-control"
+                            style={{ fontFamily: 'monospace', fontSize: '0.8rem', padding: '0.4rem 0.6rem', backgroundColor: 'var(--bg-tertiary)', flex: 1 }}
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-secondary"
+                            onClick={() => {
+                              navigator.clipboard.writeText(syncBlobId);
+                              alert('Cloud Sync Key copied to clipboard!');
+                            }}
+                            style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+                          >
+                            Copy Key
+                          </button>
+                        </div>
+                        
                         <button
                           type="button"
                           className="btn btn-secondary"
                           onClick={() => {
-                            navigator.clipboard.writeText(syncBlobId);
-                            alert('Cloud Sync Key copied to clipboard!');
+                            const link = `${window.location.origin}${window.location.pathname}?sync=${syncBlobId}`;
+                            navigator.clipboard.writeText(link);
+                            alert('Pairing Link copied to clipboard! Send this link to your other devices to pair them instantly.');
                           }}
-                          style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+                          style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', width: '100%', marginTop: '0.25rem' }}
                         >
-                          Copy Key
+                          Copy Instant Pairing Link
                         </button>
                       </div>
                     )}

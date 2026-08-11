@@ -795,6 +795,17 @@ export const AppProvider = ({ children }) => {
   // Sync from server/cloud on mount
   useEffect(() => {
     const fetchDb = async () => {
+      // Check if "?sync=XXXX" is in the URL on startup
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlSyncId = urlParams.get('sync');
+      if (urlSyncId) {
+        localStorage.setItem('mc_sync_blob_id', urlSyncId);
+        // Clean URL parameter from the browser address bar
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+        console.log('Sync key set from URL parameter:', urlSyncId);
+      }
+
       let activeDb = null;
       let loadedFromCloud = false;
 
