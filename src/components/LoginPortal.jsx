@@ -93,7 +93,7 @@ export default function LoginPortal() {
   };
 
   // Submit Student lookup verification
-  const handleStudentSubmit = (e) => {
+  const handleStudentSubmit = async (e) => {
     e.preventDefault();
     if (!studName.trim() || !studRollNo.trim()) {
       setErrorMsg('Please enter both name and roll number.');
@@ -103,7 +103,7 @@ export default function LoginPortal() {
     setErrorMsg('');
     setStatusMessage('');
 
-    const lookup = validateLookup(studName, studRollNo);
+    const lookup = await validateLookup(studName, studRollNo);
 
     if (!lookup.success) {
       setErrorMsg(lookup.error);
@@ -160,7 +160,7 @@ export default function LoginPortal() {
   };
 
   // Submit Staff Credentials Authentication
-  const handleStaffSubmit = (e) => {
+  const handleStaffSubmit = async (e) => {
     e.preventDefault();
     if (!staffEmail.trim() || !staffPassword.trim()) {
       setErrorMsg('Please enter both your email and password.');
@@ -169,26 +169,30 @@ export default function LoginPortal() {
 
     setErrorMsg('');
 
-    // 1. Try Admin login
-    const adminSuccess = loginAdmin(staffEmail, staffPassword);
-    if (adminSuccess) {
-      setStaffEmail('');
-      setStaffPassword('');
-      setCurrentRole('admin');
-      return;
-    }
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: staffEmail, password: staffPassword })
+      });
+      const data = await response.json();
 
-    // 2. Try Teacher login
-    const teacherSuccess = loginTeacher(staffEmail, staffPassword);
-    if (teacherSuccess) {
-      setStaffEmail('');
-      setStaffPassword('');
-      setCurrentRole('teacher');
-      return;
+      if (data.success) {
+        setStaffEmail('');
+        setStaffPassword('');
+        if (data.role === 'admin') {
+          loginAdmin(data.user);
+          setCurrentRole('admin');
+        } else if (data.role === 'teacher') {
+          loginTeacher(data.user);
+          setCurrentRole('teacher');
+        }
+      } else {
+        setErrorMsg(data.error || 'Invalid email or password. Please verify credentials.');
+      }
+    } catch (err) {
+      setErrorMsg('Server connection failed. Please try again.');
     }
-
-    // 3. Fallback: failed credentials
-    setErrorMsg('Invalid email or password. Please verify credentials.');
   };
 
   const nameParts = schoolName.split(' ');

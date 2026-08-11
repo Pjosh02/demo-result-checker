@@ -1,13 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import {
-  initialClasses,
-  initialSubjects,
-  initialStudents,
-  initialResults,
-  initialTeachers,
-  initialAuditLogs,
-  defaultAvatars
-} from '../mockData';
+import { defaultAvatars } from '../mockData';
 
 export const AppContext = createContext();
 
@@ -24,72 +16,22 @@ const defaultGradingScale = [
 ];
 
 export const AppProvider = ({ children }) => {
-  // Clear stale localStorage data from older Manna Academy schema/credentials
-  const CURRENT_DB_VERSION = 'v2_higgsfield';
-  const savedVersion = localStorage.getItem('mc_db_version');
-  if (savedVersion !== CURRENT_DB_VERSION) {
-    const keysToRemove = [
-      'mc_classes', 'mc_subjects', 'mc_teachers', 'mc_students', 'mc_results',
-      'mc_audit_logs', 'mc_grading_scale', 'mc_failed_attempts', 'mc_lockout_until',
-      'mc_selected_teacher_id', 'mc_teacher_logged_in', 'mc_admin_password',
-      'mc_admin_email', 'mc_school_name', 'mc_school_subtitle', 'mc_school_logo',
-      'mc_school_motto', 'mc_school_address', 'mc_report_card_font',
-      'mc_report_card_header_font', 'mc_report_card_header_font_size',
-      'mc_admin_name', 'mc_admin_avatar', 'mc_current_session', 'mc_current_term',
-      'mc_allow_student_reg', 'mc_maintenance_mode'
-    ];
-    keysToRemove.forEach(key => localStorage.removeItem(key));
-    localStorage.setItem('mc_db_version', CURRENT_DB_VERSION);
-  }
+  const [isBootstrapped, setIsBootstrapped] = useState(false);
 
-  // Load from local storage or fallback to mock seed data
-  const [classes, setClasses] = useState(() => {
-    const saved = localStorage.getItem('mc_classes');
-    return saved ? JSON.parse(saved) : initialClasses;
-  });
+  // Core Data States
+  const [classes, setClasses] = useState([]);
+  const [subjects, setSubjects] = useState({});
+  const [teachers, setTeachers] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [results, setResults] = useState([]);
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [gradingScale, setGradingScale] = useState(defaultGradingScale);
 
-  const [subjects, setSubjects] = useState(() => {
-    const saved = localStorage.getItem('mc_subjects');
-    return saved ? JSON.parse(saved) : initialSubjects;
-  });
+  // Security Lockout State (Student Lookup)
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState(null);
 
-  const [teachers, setTeachers] = useState(() => {
-    const saved = localStorage.getItem('mc_teachers');
-    return saved ? JSON.parse(saved) : initialTeachers;
-  });
-
-  const [students, setStudents] = useState(() => {
-    const saved = localStorage.getItem('mc_students');
-    return saved ? JSON.parse(saved) : initialStudents;
-  });
-
-  const [results, setResults] = useState(() => {
-    const saved = localStorage.getItem('mc_results');
-    return saved ? JSON.parse(saved) : initialResults;
-  });
-
-  const [auditLogs, setAuditLogs] = useState(() => {
-    const saved = localStorage.getItem('mc_audit_logs');
-    return saved ? JSON.parse(saved) : initialAuditLogs;
-  });
-
-  const [gradingScale, setGradingScale] = useState(() => {
-    const saved = localStorage.getItem('mc_grading_scale');
-    return saved ? JSON.parse(saved) : defaultGradingScale;
-  });
-
-  // Security Lockout State
-  const [failedAttempts, setFailedAttempts] = useState(() => {
-    const saved = localStorage.getItem('mc_failed_attempts');
-    return saved ? JSON.parse(saved) : 0;
-  });
-  
-  const [lockoutUntil, setLockoutUntil] = useState(() => {
-    const saved = localStorage.getItem('mc_lockout_until');
-    return saved ? Number(saved) : null;
-  });
-
-  // Portal view and session impersonation for testing
+  // Session & UI states
   const [currentRole, setCurrentRole] = useState('student'); // student, teacher, admin
   const [selectedTeacherId, setSelectedTeacherId] = useState(() => {
     return localStorage.getItem('mc_selected_teacher_id') || 't1';
@@ -97,13 +39,37 @@ export const AppProvider = ({ children }) => {
   const [isTeacherLoggedIn, setIsTeacherLoggedIn] = useState(() => {
     return localStorage.getItem('mc_teacher_logged_in') === 'true';
   });
-  const [viewingResult, setViewingResult] = useState(null); // Result sheet currently active in check lookup
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
+    return localStorage.getItem('mc_admin_logged_in') === 'true';
+  });
+  const [viewingResult, setViewingResult] = useState(null); 
 
-  // Theme state shared across layout/navigation components
+  // Theme state
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('mc_theme') || 'light';
   });
 
+  // Settings & Branding States
+  const [adminPassword, setAdminPassword] = useState('admin123');
+  const [adminEmail, setAdminEmail] = useState('admin@higgsfield.edu');
+  const [schoolName, setSchoolName] = useState('Higgsfield Academy');
+  const [schoolSubtitle, setSchoolSubtitle] = useState('Standalone Academic Results Checker Portal');
+  const [schoolLogo, setSchoolLogo] = useState('/logo.png');
+  const [schoolMotto, setSchoolMotto] = useState('Knowledge and Integrity');
+  const [schoolAddress, setSchoolAddress] = useState('Km 12, Lagos-Ibadan Expressway, Lagos, Nigeria | Est. 2012');
+  const [reportCardFont, setReportCardFont] = useState('inter');
+  const [reportCardHeaderFont, setReportCardHeaderFont] = useState('cinzel');
+  const [reportCardHeaderFontSize, setReportCardHeaderFontSize] = useState('2rem');
+  const [adminName, setAdminName] = useState('Dr. Joseph Alao');
+  
+  const defaultAvatar = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%231e3a8a'/><circle cx='50' cy='40' r='20' fill='%23ffffff'/><path d='M20,85 C20,65 30,55 50,55 C70,55 80,65 80,85 Z' fill='%23ffffff'/></svg>";
+  const [adminAvatar, setAdminAvatar] = useState(defaultAvatar);
+  const [currentSession, setCurrentSession] = useState('2025/2026');
+  const [currentTerm, setCurrentTerm] = useState('3rd Term');
+  const [allowStudentReg, setAllowStudentReg] = useState(true);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+
+  // Sync theme
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('mc_theme', theme);
@@ -113,166 +79,7 @@ export const AppProvider = ({ children }) => {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
 
-  // Admin settings and authentication states
-  const [adminPassword, setAdminPassword] = useState(() => {
-    return localStorage.getItem('mc_admin_password') || 'admin123';
-  });
-
-  const [adminEmail, setAdminEmail] = useState(() => {
-    const saved = localStorage.getItem('mc_admin_email');
-    if (saved === 'admin@manna.edu') return 'admin@higgsfield.edu';
-    return saved || 'admin@higgsfield.edu';
-  });
-
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
-
-  const [schoolName, setSchoolName] = useState(() => {
-    const saved = localStorage.getItem('mc_school_name');
-    if (saved === 'Manna Academy') return 'Higgsfield Academy';
-    return saved || 'Higgsfield Academy';
-  });
-
-  const [schoolSubtitle, setSchoolSubtitle] = useState(() => {
-    return localStorage.getItem('mc_school_subtitle') || 'Standalone Academic Results Checker Portal';
-  });
-
-  const [schoolLogo, setSchoolLogo] = useState(() => {
-    return localStorage.getItem('mc_school_logo') || '/logo.png';
-  });
-
-  const [schoolMotto, setSchoolMotto] = useState(() => {
-    return localStorage.getItem('mc_school_motto') || 'Knowledge and Integrity';
-  });
-
-  const [schoolAddress, setSchoolAddress] = useState(() => {
-    return localStorage.getItem('mc_school_address') || 'Km 12, Lagos-Ibadan Expressway, Lagos, Nigeria | Est. 2012';
-  });
-
-  const [reportCardFont, setReportCardFont] = useState(() => {
-    return localStorage.getItem('mc_report_card_font') || 'inter';
-  });
-
-  const [reportCardHeaderFont, setReportCardHeaderFont] = useState(() => {
-    return localStorage.getItem('mc_report_card_header_font') || 'cinzel';
-  });
-
-  const [reportCardHeaderFontSize, setReportCardHeaderFontSize] = useState(() => {
-    return localStorage.getItem('mc_report_card_header_font_size') || '2rem';
-  });
-
-  const [adminName, setAdminName] = useState(() => {
-    return localStorage.getItem('mc_admin_name') || 'Dr. Joseph Alao';
-  });
-
-  const defaultAvatar = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%231e3a8a'/><circle cx='50' cy='40' r='20' fill='%23ffffff'/><path d='M20,85 C20,65 30,55 50,55 C70,55 80,65 80,85 Z' fill='%23ffffff'/></svg>";
-
-  const [adminAvatar, setAdminAvatar] = useState(() => {
-    return localStorage.getItem('mc_admin_avatar') || defaultAvatar;
-  });
-
-  const [currentSession, setCurrentSession] = useState(() => {
-    return localStorage.getItem('mc_current_session') || '2025/2026';
-  });
-
-  const [currentTerm, setCurrentTerm] = useState(() => {
-    return localStorage.getItem('mc_current_term') || '3rd Term';
-  });
-
-  const [allowStudentReg, setAllowStudentReg] = useState(() => {
-    const saved = localStorage.getItem('mc_allow_student_reg');
-    return saved !== null ? saved === 'true' : true;
-  });
-
-  const [maintenanceMode, setMaintenanceMode] = useState(() => {
-    return localStorage.getItem('mc_maintenance_mode') === 'true';
-  });
-
-  // Sync settings to localStorage
-  useEffect(() => {
-    localStorage.setItem('mc_admin_password', adminPassword);
-  }, [adminPassword]);
-
-  useEffect(() => {
-    localStorage.setItem('mc_admin_email', adminEmail);
-  }, [adminEmail]);
-
-  useEffect(() => {
-    localStorage.setItem('mc_school_name', schoolName);
-  }, [schoolName]);
-
-  useEffect(() => {
-    localStorage.setItem('mc_school_subtitle', schoolSubtitle);
-  }, [schoolSubtitle]);
-
-  useEffect(() => {
-    localStorage.setItem('mc_school_logo', schoolLogo);
-  }, [schoolLogo]);
-
-  useEffect(() => {
-    localStorage.setItem('mc_school_motto', schoolMotto);
-  }, [schoolMotto]);
-
-  useEffect(() => {
-    localStorage.setItem('mc_school_address', schoolAddress);
-  }, [schoolAddress]);
-
-  useEffect(() => {
-    localStorage.setItem('mc_report_card_font', reportCardFont);
-  }, [reportCardFont]);
-
-  useEffect(() => {
-    localStorage.setItem('mc_report_card_header_font', reportCardHeaderFont);
-  }, [reportCardHeaderFont]);
-
-  useEffect(() => {
-    localStorage.setItem('mc_report_card_header_font_size', reportCardHeaderFontSize);
-  }, [reportCardHeaderFontSize]);
-
-  useEffect(() => {
-    localStorage.setItem('mc_admin_name', adminName);
-  }, [adminName]);
-
-  useEffect(() => {
-    localStorage.setItem('mc_admin_avatar', adminAvatar);
-  }, [adminAvatar]);
-
-  useEffect(() => {
-    localStorage.setItem('mc_current_session', currentSession);
-  }, [currentSession]);
-
-  useEffect(() => {
-    localStorage.setItem('mc_current_term', currentTerm);
-  }, [currentTerm]);
-
-  useEffect(() => {
-    localStorage.setItem('mc_allow_student_reg', allowStudentReg.toString());
-  }, [allowStudentReg]);
-
-  useEffect(() => {
-    localStorage.setItem('mc_maintenance_mode', maintenanceMode.toString());
-  }, [maintenanceMode]);
-
-  // Auth Helpers
-  const loginAdmin = (email, password) => {
-    if (email.trim().toLowerCase() === adminEmail.trim().toLowerCase() && password.trim() === adminPassword.trim()) {
-      setIsAdminLoggedIn(true);
-      logAction('Admin Login', 'System', 'Administrator successfully logged into dashboard.');
-      return true;
-    }
-    logAction('Admin Login Failed', 'System', 'Failed login attempt on Admin Portal.');
-    return false;
-  };
-
-  const logoutAdmin = () => {
-    setIsAdminLoggedIn(false);
-    logAction('Admin Logout', 'System', 'Administrator logged out of dashboard.');
-  };
-
-  // Sync to local storage on changes
-  useEffect(() => {
-    localStorage.setItem('mc_classes', JSON.stringify(classes));
-  }, [classes]);
-
+  // Sync login status for page refreshes
   useEffect(() => {
     localStorage.setItem('mc_teacher_logged_in', isTeacherLoggedIn.toString());
   }, [isTeacherLoggedIn]);
@@ -282,54 +89,150 @@ export const AppProvider = ({ children }) => {
   }, [selectedTeacherId]);
 
   useEffect(() => {
-    localStorage.setItem('mc_subjects', JSON.stringify(subjects));
-  }, [subjects]);
+    localStorage.setItem('mc_admin_logged_in', isAdminLoggedIn.toString());
+  }, [isAdminLoggedIn]);
 
-  useEffect(() => {
-    localStorage.setItem('mc_teachers', JSON.stringify(teachers));
-  }, [teachers]);
-
-  useEffect(() => {
-    localStorage.setItem('mc_students', JSON.stringify(students));
-  }, [students]);
-
-  useEffect(() => {
-    localStorage.setItem('mc_results', JSON.stringify(results));
-  }, [results]);
-
-  useEffect(() => {
-    localStorage.setItem('mc_audit_logs', JSON.stringify(auditLogs));
-  }, [auditLogs]);
-
-  useEffect(() => {
-    localStorage.setItem('mc_grading_scale', JSON.stringify(gradingScale));
-  }, [gradingScale]);
-
-  useEffect(() => {
-    localStorage.setItem('mc_failed_attempts', failedAttempts.toString());
-  }, [failedAttempts]);
-
-  useEffect(() => {
-    if (lockoutUntil) {
-      localStorage.setItem('mc_lockout_until', lockoutUntil.toString());
-    } else {
-      localStorage.removeItem('mc_lockout_until');
+  // Load database into state on mount
+  const fetchData = async () => {
+    try {
+      const res = await fetch('/api/bootstrap');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.settings) {
+          setSchoolName(data.settings.schoolName);
+          setSchoolSubtitle(data.settings.schoolSubtitle);
+          setSchoolLogo(data.settings.schoolLogo);
+          setSchoolMotto(data.settings.schoolMotto);
+          setSchoolAddress(data.settings.schoolAddress);
+          setReportCardFont(data.settings.reportCardFont);
+          setReportCardHeaderFont(data.settings.reportCardHeaderFont);
+          setReportCardHeaderFontSize(data.settings.reportCardHeaderFontSize);
+          setAdminName(data.settings.adminName);
+          setAdminEmail(data.settings.adminEmail);
+          setAdminPassword(data.settings.adminPassword);
+          setAdminAvatar(data.settings.adminAvatar);
+          setCurrentSession(data.settings.currentSession);
+          setCurrentTerm(data.settings.currentTerm);
+          setAllowStudentReg(data.settings.allowStudentReg);
+          setMaintenanceMode(data.settings.maintenanceMode);
+          if (data.settings.gradingScale) {
+            setGradingScale(typeof data.settings.gradingScale === 'string' ? JSON.parse(data.settings.gradingScale) : data.settings.gradingScale);
+          }
+        }
+        if (data.classes) setClasses(data.classes);
+        if (data.subjects) setSubjects(data.subjects);
+        if (data.teachers) setTeachers(data.teachers);
+        if (data.students) setStudents(data.students);
+        if (data.results) setResults(data.results);
+        if (data.auditLogs) setAuditLogs(data.auditLogs);
+      }
+    } catch (err) {
+      console.error('Failed to bootstrap data:', err);
+    } finally {
+      setIsBootstrapped(true);
     }
-  }, [lockoutUntil]);
-
-  // Audit logging helper
-  const logAction = (action, user, details) => {
-    const newLog = {
-      id: 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-      action,
-      user,
-      timestamp: new Date().toISOString(),
-      details
-    };
-    setAuditLogs(prev => [newLog, ...prev]);
   };
 
-  // Helper: Get Grade Details
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Sync settings when they change after bootstrap completes (debounced)
+  useEffect(() => {
+    if (!isBootstrapped) return;
+    const saveSettings = async () => {
+      try {
+        await fetch('/api/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            schoolName,
+            schoolSubtitle,
+            schoolLogo,
+            schoolMotto,
+            schoolAddress,
+            reportCardFont,
+            reportCardHeaderFont,
+            reportCardHeaderFontSize,
+            adminName,
+            adminEmail,
+            adminPassword,
+            adminAvatar,
+            currentSession,
+            currentTerm,
+            allowStudentReg,
+            maintenanceMode,
+            gradingScale
+          })
+        });
+      } catch (err) {
+        console.error('Failed to sync settings to server:', err);
+      }
+    };
+
+    const timer = setTimeout(saveSettings, 1000);
+    return () => clearTimeout(timer);
+  }, [
+    isBootstrapped,
+    schoolName, schoolSubtitle, schoolLogo, schoolMotto, schoolAddress,
+    reportCardFont, reportCardHeaderFont, reportCardHeaderFontSize,
+    adminName, adminEmail, adminPassword, adminAvatar, currentSession,
+    currentTerm, allowStudentReg, maintenanceMode, gradingScale
+  ]);
+
+  const fetchAuditLogs = async () => {
+    try {
+      const res = await fetch('/api/audit-logs');
+      if (res.ok) {
+        const logs = await res.json();
+        setAuditLogs(logs);
+      }
+    } catch (e) {
+      console.error('Failed to fetch audit logs:', e);
+    }
+  };
+
+  // Auth Helpers
+  const loginAdmin = () => {
+    setIsAdminLoggedIn(true);
+  };
+
+  const logoutAdmin = () => {
+    setIsAdminLoggedIn(false);
+    fetch('/api/audit-logs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        action: 'Admin Logout',
+        user: 'System',
+        timestamp: new Date().toISOString(),
+        details: 'Administrator logged out of dashboard.'
+      })
+    }).then(() => fetchAuditLogs());
+  };
+
+  const loginTeacher = (user) => {
+    setSelectedTeacherId(user.id);
+    setIsTeacherLoggedIn(true);
+  };
+
+  const logoutTeacher = () => {
+    setIsTeacherLoggedIn(false);
+    fetch('/api/audit-logs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        action: 'Teacher Logout',
+        user: 'System',
+        timestamp: new Date().toISOString(),
+        details: 'Logged out of Teacher Panel.'
+      })
+    }).then(() => fetchAuditLogs());
+  };
+
+  // Grade Lookup Helper
   const getGradeInfo = (score) => {
     const parsed = parseFloat(score);
     if (isNaN(parsed)) return { grade: '-', remark: '-', color: 'var(--text-muted)' };
@@ -337,7 +240,7 @@ export const AppProvider = ({ children }) => {
     return rule || { grade: 'F9', remark: 'Fail', color: 'var(--danger)' };
   };
 
-  // Structured Roll Number generator (random unique integer 0-5000)
+  // Roll Number generator
   const generateRollNo = () => {
     let roll = 0;
     let exists = true;
@@ -358,31 +261,24 @@ export const AppProvider = ({ children }) => {
     return roll;
   };
 
-  // Position Calculator (calculated in real-time based on finalized results)
+  // Class Rankings Calculator
   const getClassRanking = (classId, term, session) => {
-    // Filter results matching class, term, session
     const classResults = results.filter(r => r.classId === classId && r.term === term && r.session === session);
-    
-    // Calculate total score and average for each result
     const scoredResults = classResults.map(res => {
       const subjectScores = Object.values(res.scores);
       const totalScore = subjectScores.reduce((acc, curr) => acc + (curr.total || 0), 0);
       const avg = subjectScores.length > 0 ? (totalScore / subjectScores.length) : 0;
       return {
-        resultId: res.id,
         studentId: res.studentId,
         totalScore,
         avg
       };
     });
 
-    // Sort descending by total score
     scoredResults.sort((a, b) => b.totalScore - a.totalScore);
 
-    // Compute rank with ties handled (e.g. 1st, 2nd, 2nd, 4th)
     let currentRank = 1;
     const rankings = {};
-    
     scoredResults.forEach((item, idx) => {
       if (idx > 0 && item.totalScore < scoredResults[idx - 1].totalScore) {
         currentRank = idx + 1;
@@ -398,346 +294,457 @@ export const AppProvider = ({ children }) => {
   };
 
   // Student CRUD Operations
-  const addStudent = (studentData, actor) => {
+  const addStudent = async (studentData, actor) => {
     let rollNoVal = parseInt(studentData.rollNo);
     if (isNaN(rollNoVal) || rollNoVal < 0 || rollNoVal > 5000) {
       rollNoVal = generateRollNo();
     }
-    const newStudent = {
-      id: 'std_' + Date.now(),
-      name: studentData.name.trim(),
-      classId: studentData.classId,
+    const payload = {
+      ...studentData,
       rollNo: rollNoVal,
-      dob: studentData.dob,
-      fatherName: studentData.fatherName.trim(),
-      motherName: studentData.motherName.trim(),
-      parentContact: studentData.parentContact?.trim() || '',
-      photo: studentData.photo || defaultAvatars[Math.floor(Math.random() * defaultAvatars.length)],
-      active: true
+      photo: studentData.photo || defaultAvatars[Math.floor(Math.random() * defaultAvatars.length)]
     };
-    setStudents(prev => [...prev, newStudent]);
-    logAction('Added Student', actor, `Registered student ${newStudent.name} (Roll No: ${newStudent.rollNo}) into class ${newStudent.classId}.`);
-    return newStudent;
-  };
 
-  const updateStudent = (studentId, updatedData, actor) => {
-    setStudents(prev => prev.map(s => s.id === studentId ? { ...s, ...updatedData } : s));
-    logAction('Updated Student', actor, `Modified student profile for ${updatedData.name || studentId}.`);
-  };
-
-  const removeStudent = (studentId, actor) => {
-    const std = students.find(s => s.id === studentId);
-    setStudents(prev => prev.filter(s => s.id !== studentId));
-    if (std) {
-      logAction('Removed Student', actor, `Deleted student profile for ${std.name} (Roll No: ${std.rollNo}).`);
+    try {
+      const res = await fetch('/api/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentData: payload, actor })
+      });
+      if (res.ok) {
+        const newStudent = await res.json();
+        setStudents(prev => [...prev, newStudent]);
+        fetchAuditLogs();
+        return newStudent;
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to register student on server.');
     }
   };
 
-  // Teacher Login/Logout validation
-  const loginTeacher = (email, password) => {
-    const found = teachers.find(
-      t => t.email.trim().toLowerCase() === email.trim().toLowerCase() && 
-      (t.password || 'password123').trim() === password.trim()
-    );
-    if (found) {
-      setSelectedTeacherId(found.id);
-      setIsTeacherLoggedIn(true);
-      logAction('Teacher Login', found.name, `Logged in successfully to Teacher Panel.`);
-      return true;
+  const updateStudent = async (studentId, updatedData, actor) => {
+    try {
+      const res = await fetch(`/api/students/${studentId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ updatedData, actor })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setStudents(prev => prev.map(s => s.id === studentId ? { ...s, ...updated } : s));
+        fetchAuditLogs();
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update student profile on server.');
     }
-    return false;
   };
 
-  const logoutTeacher = () => {
-    setIsTeacherLoggedIn(false);
-    logAction('Teacher Logout', 'System', `Logged out of Teacher Panel.`);
+  const removeStudent = async (studentId, actor) => {
+    try {
+      const res = await fetch(`/api/students/${studentId}?actor=${encodeURIComponent(actor)}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        setStudents(prev => prev.filter(s => s.id !== studentId));
+        fetchAuditLogs();
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to remove student from server.');
+    }
   };
 
   // Teacher CRUD Operations
-  const addTeacher = (teacherData, actor) => {
-    const newTeacher = {
-      id: 't_' + Date.now(),
-      name: teacherData.name.trim(),
-      email: teacherData.email.trim(),
-      password: teacherData.password ? teacherData.password.trim() : 'password123',
-      assignedClass: teacherData.assignedClass,
-      subjects: teacherData.subjects || [],
+  const addTeacher = async (teacherData, actor) => {
+    const payload = {
+      ...teacherData,
+      password: teacherData.password || 'password123',
       photo: teacherData.photo || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="%234f46e5"/><circle cx="50" cy="40" r="20" fill="%23ffffff"/><path d="M20,85 C20,65 30,55 50,55 C70,55 80,65 80,85 Z" fill="%23ffffff"/></svg>'
     };
-    setTeachers(prev => [...prev, newTeacher]);
-    logAction('Added Class Teacher', actor, `Registered teacher ${newTeacher.name} and assigned to class ${newTeacher.assignedClass}.`);
-    return newTeacher;
+
+    try {
+      const res = await fetch('/api/teachers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teacherData: payload, actor })
+      });
+      if (res.ok) {
+        const newTeacher = await res.json();
+        setTeachers(prev => [...prev, newTeacher]);
+        fetchAuditLogs();
+        return newTeacher;
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to add teacher to server.');
+    }
   };
 
-  const updateTeacher = (teacherId, updatedData, actor) => {
-    setTeachers(prev => prev.map(t => t.id === teacherId ? { ...t, ...updatedData } : t));
-    logAction('Updated Class Teacher', actor, `Modified teacher profile for ${updatedData.name || teacherId}.`);
+  const updateTeacher = async (teacherId, updatedData, actor) => {
+    try {
+      const res = await fetch(`/api/teachers/${teacherId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ updatedData, actor })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setTeachers(prev => prev.map(t => t.id === teacherId ? { ...t, ...updated } : t));
+        fetchAuditLogs();
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update teacher profile on server.');
+    }
   };
 
-  const removeTeacher = (teacherId, actor) => {
-    const teacher = teachers.find(t => t.id !== teacherId);
-    setTeachers(prev => prev.filter(t => t.id !== teacherId));
-    logAction('Removed Class Teacher', actor, `Removed teacher ${teacher?.name || teacherId} from assignment.`);
+  const removeTeacher = async (teacherId, actor) => {
+    try {
+      const res = await fetch(`/api/teachers/${teacherId}?actor=${encodeURIComponent(actor)}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        setTeachers(prev => prev.filter(t => t.id !== teacherId));
+        fetchAuditLogs();
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete teacher from server.');
+    }
   };
 
   // Subject CRUD Operations
-  const addSubject = (subjectData, actor) => {
-    const id = subjectData.id.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_') || 'sub_' + Date.now();
-    const newSubject = {
-      id,
-      name: subjectData.name.trim(),
-      defaultTeacher: subjectData.defaultTeacher || 'Unassigned'
-    };
-    setSubjects(prev => ({
-      ...prev,
-      [id]: newSubject
-    }));
-    logAction('Added Subject', actor, `Registered subject ${newSubject.name} (${newSubject.id}).`);
-    return newSubject;
-  };
-
-  const updateSubject = (subjectId, updatedData, actor) => {
-    setSubjects(prev => ({
-      ...prev,
-      [subjectId]: {
-        ...prev[subjectId],
-        ...updatedData
+  const addSubject = async (subjectData, actor) => {
+    try {
+      const res = await fetch('/api/subjects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subjectData, actor })
+      });
+      if (res.ok) {
+        const newSubject = await res.json();
+        setSubjects(prev => ({ ...prev, [newSubject.id]: newSubject }));
+        fetchAuditLogs();
+        return newSubject;
       }
-    }));
-    logAction('Updated Subject', actor, `Modified subject details for ${updatedData.name || subjectId}.`);
-  };
-
-  const removeSubject = (subjectId, actor) => {
-    const subName = subjects[subjectId]?.name || subjectId;
-    setSubjects(prev => {
-      const next = { ...prev };
-      delete next[subjectId];
-      return next;
-    });
-    // Cascade delete reference from classes
-    setClasses(prev => prev.map(c => ({
-      ...c,
-      subjects: c.subjects.filter(id => id !== subjectId)
-    })));
-    // Cascade delete reference from teachers
-    setTeachers(prev => prev.map(t => ({
-      ...t,
-      subjects: t.subjects ? t.subjects.filter(id => id !== subjectId) : []
-    })));
-    logAction('Removed Subject', actor, `Deleted subject ${subName} (${subjectId}) from registry.`);
-  };
-
-  // Results submission/publishing operations
-  const saveOrSubmitResult = (resultData, actor) => {
-    const existingIdx = results.findIndex(
-      r => r.studentId === resultData.studentId && r.classId === resultData.classId && r.term === resultData.term && r.session === resultData.session
-    );
-
-    const newResult = {
-      id: existingIdx >= 0 ? results[existingIdx].id : 'res_' + Date.now(),
-      ...resultData,
-      status: 'published' // Saved by teacher is immediately published
-    };
-
-    if (existingIdx >= 0) {
-      setResults(prev => prev.map((r, i) => i === existingIdx ? newResult : r));
-      logAction('Updated Result', actor, `Teacher updated score entries for student ID ${resultData.studentId} in class ${resultData.classId} (Published).`);
-    } else {
-      setResults(prev => [...prev, newResult]);
-      logAction('Created Result', actor, `Teacher submitted scores for student ID ${resultData.studentId} in class ${resultData.classId} (Published).`);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to create subject on server.');
     }
   };
 
-  const publishResult = (resultId, actor) => {
-    setResults(prev => prev.map(r => {
-      if (r.id === resultId) {
-        logAction('Published Result', actor, `Approved and published result for student ID ${r.studentId} in class ${r.classId}.`);
-        return { ...r, status: 'published' };
+  const updateSubject = async (subjectId, updatedData, actor) => {
+    try {
+      const res = await fetch(`/api/subjects/${subjectId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ updatedData, actor })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setSubjects(prev => ({ ...prev, [subjectId]: { ...prev[subjectId], ...updated } }));
+        fetchAuditLogs();
       }
-      return r;
-    }));
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update subject on server.');
+    }
   };
 
-  const unpublishResult = (resultId, actor) => {
-    setResults(prev => prev.map(r => {
-      if (r.id === resultId) {
-        logAction('Unpublished Result', actor, `Withdrew result for student ID ${r.studentId} in class ${r.classId} back to draft.`);
-        return { ...r, status: 'draft' };
+  const removeSubject = async (subjectId, actor) => {
+    try {
+      const res = await fetch(`/api/subjects/${subjectId}?actor=${encodeURIComponent(actor)}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        setSubjects(prev => {
+          const next = { ...prev };
+          delete next[subjectId];
+          return next;
+        });
+        setClasses(prev => prev.map(c => ({
+          ...c,
+          subjects: c.subjects.filter(id => id !== subjectId)
+        })));
+        setTeachers(prev => prev.map(t => ({
+          ...t,
+          subjects: t.subjects ? t.subjects.filter(id => id !== subjectId) : []
+        })));
+        fetchAuditLogs();
       }
-      return r;
-    }));
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete subject from server.');
+    }
   };
 
-  const publishClassResults = (classId, term, session, actor) => {
-    setResults(prev => prev.map(r => {
-      if (r.classId === classId && r.term === term && r.session === session && r.status === 'draft') {
-        return { ...r, status: 'published' };
-      }
-      return r;
-    }));
-    logAction('Bulk Published Results', actor, `Approved and published all draft results for class ${classId} (${term}, ${session}).`);
-  };
-
-  const unpublishClassResults = (classId, term, session, actor) => {
-    setResults(prev => prev.map(r => {
-      if (r.classId === classId && r.term === term && r.session === session && r.status === 'published') {
-        return { ...r, status: 'draft' };
-      }
-      return r;
-    }));
-    logAction('Bulk Unpublished Results', actor, `Withdrew all results for class ${classId} (${term}, ${session}) back to draft.`);
-  };
-
-  const addPrincipalRemark = (resultId, remark, actor) => {
-    setResults(prev => prev.map(r => {
-      if (r.id === resultId) {
-        logAction('Added Principal Remark', actor, `Saved principal's remark for result ID ${resultId}.`);
-        return {
-          ...r,
-          remarks: {
-            ...(r.remarks || {}),
-            principal: remark,
-            principalName: 'Dr. Joseph Alao',
-            principalSignature: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="50" viewBox="0 0 150 50"><path d="M15,25 C30,5 45,45 60,25 S85,5 110,25 S135,15 145,35" fill="none" stroke="%23064e3b" stroke-width="2.5" stroke-linecap="round"/><text x="15" y="45" font-family="cursive" font-size="11" fill="%23064e3b">Dr. Joseph Alao</text></svg>',
-            principalDate: new Date().toISOString().split('T')[0]
+  // Results Operations
+  const saveOrSubmitResult = async (resultData, actor) => {
+    try {
+      const res = await fetch('/api/results', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resultData, actor })
+      });
+      if (res.ok) {
+        const updatedResult = await res.json();
+        setResults(prev => {
+          const idx = prev.findIndex(r => r.id === updatedResult.id);
+          if (idx >= 0) {
+            return prev.map((r, i) => i === idx ? updatedResult : r);
+          } else {
+            return [...prev, updatedResult];
           }
-        };
+        });
+        fetchAuditLogs();
       }
-      return r;
-    }));
+    } catch (err) {
+      console.error(err);
+      alert('Failed to submit student result to server.');
+    }
   };
 
-  // Bulk Principal remarks by performance average bands
-  const applyBulkRemarksByBand = (classId, term, session, bands, actor) => {
-    const rankings = getClassRanking(classId, term, session);
-    
-    setResults(prev => prev.map(r => {
-      if (r.classId === classId && r.term === term && r.session === session) {
-        const studentStats = rankings[r.studentId];
-        if (!studentStats) return r;
-        
-        // Find matching remark band
-        const avg = studentStats.average;
-        const matchingBand = bands.find(b => avg >= b.min && avg <= b.max);
-        const remark = matchingBand ? matchingBand.remark : 'Good effort, keep striving for excellence.';
+  const publishResult = async (resultId, actor) => {
+    try {
+      const res = await fetch('/api/results/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resultId, actor })
+      });
+      if (res.ok) {
+        setResults(prev => prev.map(r => r.id === resultId ? { ...r, status: 'published' } : r));
+        fetchAuditLogs();
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to publish result.');
+    }
+  };
 
-        return {
-          ...r,
-          remarks: {
-            ...(r.remarks || {}),
-            principal: remark,
-            principalName: 'Dr. Joseph Alao',
-            principalSignature: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="50" viewBox="0 0 150 50"><path d="M15,25 C30,5 45,45 60,25 S85,5 110,25 S135,15 145,35" fill="none" stroke="%23064e3b" stroke-width="2.5" stroke-linecap="round"/><text x="15" y="45" font-family="cursive" font-size="11" fill="%23064e3b">Dr. Joseph Alao</text></svg>',
-            principalDate: new Date().toISOString().split('T')[0]
+  const unpublishResult = async (resultId, actor) => {
+    try {
+      const res = await fetch('/api/results/unpublish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resultId, actor })
+      });
+      if (res.ok) {
+        setResults(prev => prev.map(r => r.id === resultId ? { ...r, status: 'draft' } : r));
+        fetchAuditLogs();
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to withdraw result.');
+    }
+  };
+
+  const publishClassResults = async (classId, term, session, actor) => {
+    try {
+      const res = await fetch('/api/results/publish-class', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ classId, term, session, actor })
+      });
+      if (res.ok) {
+        setResults(prev => prev.map(r => {
+          if (r.classId === classId && r.term === term && r.session === session && r.status === 'draft') {
+            return { ...r, status: 'published' };
           }
-        };
+          return r;
+        }));
+        fetchAuditLogs();
       }
-      return r;
-    }));
-    
-    logAction('Applied Bulk Principal Remarks', actor, `Assigned principal comments in bulk by average score bands for class ${classId}.`);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to bulk publish results.');
+    }
   };
 
-  // Setup/Settings Operations
+  const unpublishClassResults = async (classId, term, session, actor) => {
+    try {
+      const res = await fetch('/api/results/unpublish-class', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ classId, term, session, actor })
+      });
+      if (res.ok) {
+        setResults(prev => prev.map(r => {
+          if (r.classId === classId && r.term === term && r.session === session && r.status === 'published') {
+            return { ...r, status: 'draft' };
+          }
+          return r;
+        }));
+        fetchAuditLogs();
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to bulk withdraw results.');
+    }
+  };
+
+  const addPrincipalRemark = async (resultId, remark, actor) => {
+    try {
+      const res = await fetch('/api/results/remark', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resultId, remark, actor })
+      });
+      if (res.ok) {
+        setResults(prev => prev.map(r => {
+          if (r.id === resultId) {
+            return {
+              ...r,
+              remarks: {
+                ...(r.remarks || {}),
+                principal: remark,
+                principalName: 'Dr. Joseph Alao',
+                principalSignature: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="50" viewBox="0 0 150 50"><path d="M15,25 C30,5 45,45 60,25 S85,5 110,25 S135,15 145,35" fill="none" stroke="%23064e3b" stroke-width="2.5" stroke-linecap="round"/><text x="15" y="45" font-family="cursive" font-size="11" fill="%23064e3b">Dr. Joseph Alao</text></svg>',
+                principalDate: new Date().toISOString().split('T')[0]
+              }
+            };
+          }
+          return r;
+        }));
+        fetchAuditLogs();
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to record principal comment.');
+    }
+  };
+
+  const applyBulkRemarksByBand = async (classId, term, session, bands, actor) => {
+    try {
+      const res = await fetch('/api/results/bulk-remarks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ classId, term, session, bands, actor })
+      });
+      if (res.ok) {
+        const rankings = getClassRanking(classId, term, session);
+        setResults(prev => prev.map(r => {
+          if (r.classId === classId && r.term === term && r.session === session) {
+            const stats = rankings[r.studentId];
+            if (!stats) return r;
+            const avg = stats.average;
+            const matchingBand = bands.find(b => avg >= b.min && avg <= b.max);
+            const remark = matchingBand ? matchingBand.remark : 'Good effort, keep striving for excellence.';
+            return {
+              ...r,
+              remarks: {
+                ...(r.remarks || {}),
+                principal: remark,
+                principalName: 'Dr. Joseph Alao',
+                principalSignature: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="50" viewBox="0 0 150 50"><path d="M15,25 C30,5 45,45 60,25 S85,5 110,25 S135,15 145,35" fill="none" stroke="%23064e3b" stroke-width="2.5" stroke-linecap="round"/><text x="15" y="45" font-family="cursive" font-size="11" fill="%23064e3b">Dr. Joseph Alao</text></svg>',
+                principalDate: new Date().toISOString().split('T')[0]
+              }
+            };
+          }
+          return r;
+        }));
+        fetchAuditLogs();
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to apply bulk remarks.');
+    }
+  };
+
+  // Settings & Grading Config
   const saveGradingScale = (newScale, actor) => {
     setGradingScale(newScale);
-    logAction('Configured Grading Scale', actor, 'Updated score range mappings for WAEC assessment.');
   };
 
-  const createClass = (classId, baseName, arm, subjectIds, actor) => {
-    const fullName = arm.trim() ? `${baseName.trim()} ${arm.trim()}` : baseName.trim();
-    const newClass = { id: classId, name: fullName, baseName: baseName.trim(), arm: arm.trim(), subjects: subjectIds };
-    setClasses(prev => [...prev, newClass]);
-    logAction('Created Class', actor, `Added class ${fullName} (${classId}) to curriculum.`);
-  };
-
-  const updateClassSubjects = (classId, subjectIds, actor) => {
-    setClasses(prev => prev.map(c => c.id === classId ? { ...c, subjects: subjectIds } : c));
-    logAction('Allocated Class Subjects', actor, `Updated subjects allocation for class ID ${classId}.`);
-  };
-
-  const updateClass = (classId, baseName, arm, actor) => {
-    const fullName = arm.trim() ? `${baseName.trim()} ${arm.trim()}` : baseName.trim();
-    setClasses(prev => prev.map(c => c.id === classId ? { ...c, name: fullName, baseName: baseName.trim(), arm: arm.trim() } : c));
-    logAction('Updated Class', actor, `Renamed class ID ${classId} to ${fullName}.`);
-  };
-
-  const removeClass = (classId, actor) => {
-    setClasses(prev => prev.filter(c => c.id !== classId));
-    logAction('Removed Class', actor, `Deleted class ID ${classId} from curriculum.`);
-  };
-
-  // Security lookup validation with lockout checks
-  const validateLookup = (name, rollNo) => {
-    const now = Date.now();
-
-    // Check if locked out
-    if (lockoutUntil && now < lockoutUntil) {
-      const remainingSeconds = Math.ceil((lockoutUntil - now) / 1000);
-      return {
-        success: false,
-        error: `Too many failed attempts. Lookup is locked. Please try again in ${remainingSeconds} seconds.`,
-        locked: true
-      };
-    }
-
-    const cleanedName = name.trim().toLowerCase();
-    const targetRoll = parseInt(rollNo);
-
-    // Find student matching Name + RollNo
-    const matchedStudent = students.find(
-      s => s.name.trim().toLowerCase() === cleanedName && s.rollNo === targetRoll
-    );
-
-    if (!matchedStudent) {
-      // Increment failed attempts
-      const newAttempts = failedAttempts + 1;
-      setFailedAttempts(newAttempts);
-
-      if (newAttempts >= 5) {
-        const lockDuration = 5 * 60 * 1000; // 5 minutes
-        const until = now + lockDuration;
-        setLockoutUntil(until);
-        setFailedAttempts(0);
-        return {
-          success: false,
-          error: 'Maximum lookup attempts exceeded. Access locked for 5 minutes.',
-          locked: true
-        };
+  // Class Management
+  const createClass = async (classId, baseName, arm, subjectIds, actor) => {
+    try {
+      const res = await fetch('/api/classes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ classId, baseName, arm, subjectIds, actor })
+      });
+      if (res.ok) {
+        const newClass = await res.json();
+        setClasses(prev => [...prev, newClass]);
+        fetchAuditLogs();
       }
-
-      return {
-        success: false,
-        error: `Invalid full name or roll number. (${5 - newAttempts} attempts remaining)`,
-        locked: false
-      };
+    } catch (err) {
+      console.error(err);
+      alert('Failed to register class on server.');
     }
-
-    // Success - reset attempts
-    setFailedAttempts(0);
-    setLockoutUntil(null);
-
-    // Find results for this student
-    const studentResults = results.filter(r => r.studentId === matchedStudent.id);
-
-    return {
-      success: true,
-      student: matchedStudent,
-      resultsList: studentResults // Let UI check draft/published status
-    };
   };
 
-  // Server Database Sync State
-  const [isSynced, setIsSynced] = useState(false);
-  const [apiActive, setApiActive] = useState(false);
-  const [syncBlobId, setSyncBlobId] = useState(() => {
-    return localStorage.getItem('mc_sync_blob_id') || '';
-  });
+  const updateClass = async (classId, baseName, arm, actor) => {
+    try {
+      const res = await fetch(`/api/classes/${classId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ baseName, arm, actor })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setClasses(prev => prev.map(c => c.id === classId ? { ...c, ...updated } : c));
+        fetchAuditLogs();
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update class details.');
+    }
+  };
 
-  // Helper to compile the entire database JSON
+  const updateClassSubjects = async (classId, subjectIds, actor) => {
+    try {
+      const res = await fetch(`/api/classes/${classId}/subjects`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subjectIds, actor })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setClasses(prev => prev.map(c => c.id === classId ? { ...c, subjects: updated.subjects } : c));
+        fetchAuditLogs();
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to allocate class subjects.');
+    }
+  };
+
+  const removeClass = async (classId, actor) => {
+    try {
+      const res = await fetch(`/api/classes/${classId}?actor=${encodeURIComponent(actor)}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        setClasses(prev => prev.filter(c => c.id !== classId));
+        fetchAuditLogs();
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete class.');
+    }
+  };
+
+  // Student Lookup validation
+  const validateLookup = async (name, rollNo) => {
+    try {
+      const response = await fetch('/api/students/verify-lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, rollNo })
+      });
+      const data = await response.json();
+      return data;
+    } catch (err) {
+      return { success: false, error: 'Connection to server failed. Please try again.' };
+    }
+  };
+
+  // Database Backup Helpers
   const getFullDatabaseJson = () => {
     return {
-      syncBlobId: localStorage.getItem('mc_sync_blob_id') || syncBlobId,
       classes,
       subjects,
       teachers,
@@ -764,247 +771,6 @@ export const AppProvider = ({ children }) => {
     };
   };
 
-  const saveToServer = async () => {
-    const dbData = getFullDatabaseJson();
-    if (apiActive) {
-      try {
-        await fetch('/api/db', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(dbData)
-        });
-      } catch (e) {
-        console.error('Failed to sync changes to local server:', e);
-      }
-    }
-
-    const savedBlobId = localStorage.getItem('mc_sync_blob_id') || syncBlobId;
-    if (savedBlobId) {
-      try {
-        await fetch(`https://jsonblob.com/api/jsonBlob/${savedBlobId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(dbData)
-        });
-      } catch (e) {
-        console.error('Failed to sync changes to JSONBlob cloud store:', e);
-      }
-    }
-  };
-
-  // Sync from server/cloud on mount
-  useEffect(() => {
-    const fetchDb = async () => {
-      // Check if "?sync=XXXX" is in the URL on startup
-      const urlParams = new URLSearchParams(window.location.search);
-      const urlSyncId = urlParams.get('sync');
-      if (urlSyncId) {
-        localStorage.setItem('mc_sync_blob_id', urlSyncId);
-        // Clean URL parameter from the browser address bar
-        const newUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, newUrl);
-        console.log('Sync key set from URL parameter:', urlSyncId);
-      }
-
-      let activeDb = null;
-      let loadedFromCloud = false;
-
-      // 1. Try to fetch from JSONBlob Cloud Sync
-      const savedBlobId = localStorage.getItem('mc_sync_blob_id') || syncBlobId;
-      if (savedBlobId) {
-        try {
-          const cloudRes = await fetch(`https://jsonblob.com/api/jsonBlob/${savedBlobId}`);
-          if (cloudRes.ok) {
-            activeDb = await cloudRes.json();
-            loadedFromCloud = true;
-            console.log('Successfully synchronized database from JSONBlob cloud store.');
-          } else if (cloudRes.status === 404) {
-            console.warn('Cloud sync bin was deleted or expired.');
-          }
-        } catch (e) {
-          console.warn('Failed to fetch from JSONBlob cloud store:', e);
-        }
-      }
-
-      // 2. Fallback: Fetch from /db.json (static build / local dev server)
-      if (!activeDb) {
-        try {
-          const res = await fetch('/db.json');
-          if (res.ok) {
-            const data = await res.json();
-            if (data.status !== 'no_db') {
-              activeDb = data;
-              // If the static database has a sync ID, immediately try to fetch from the cloud
-              // to get any real-time changes that are newer than the static snapshot!
-              if (data.syncBlobId) {
-                try {
-                  const cloudRes = await fetch(`https://jsonblob.com/api/jsonBlob/${data.syncBlobId}`);
-                  if (cloudRes.ok) {
-                    const cloudDb = await cloudRes.json();
-                    activeDb = cloudDb;
-                    loadedFromCloud = true;
-                    console.log('Discovered Sync ID in db.json, successfully loaded latest cloud state.');
-                  }
-                } catch (e) {
-                  console.warn('Failed to fetch from cloud after finding key in db.json:', e);
-                }
-              }
-            }
-          }
-        } catch (err) {
-          console.warn('Vite static /db.json asset not available:', err);
-        }
-      }
-
-      // 3. Load database into state if retrieved
-      if (activeDb) {
-        if (activeDb.syncBlobId) {
-          localStorage.setItem('mc_sync_blob_id', activeDb.syncBlobId);
-          setSyncBlobId(activeDb.syncBlobId);
-        }
-        if (activeDb.classes) setClasses(activeDb.classes);
-        if (activeDb.subjects) setSubjects(activeDb.subjects);
-        if (activeDb.teachers) setTeachers(activeDb.teachers);
-        if (activeDb.students) setStudents(activeDb.students);
-        if (activeDb.results) setResults(activeDb.results);
-        if (activeDb.auditLogs) setAuditLogs(activeDb.auditLogs);
-        if (activeDb.gradingScale) setGradingScale(activeDb.gradingScale);
-        if (activeDb.adminEmail) setAdminEmail(activeDb.adminEmail);
-        if (activeDb.adminPassword) setAdminPassword(activeDb.adminPassword);
-        if (activeDb.schoolName) setSchoolName(activeDb.schoolName);
-        if (activeDb.schoolSubtitle) setSchoolSubtitle(activeDb.schoolSubtitle);
-        if (activeDb.schoolLogo) setSchoolLogo(activeDb.schoolLogo);
-        if (activeDb.schoolMotto) setSchoolMotto(activeDb.schoolMotto);
-        if (activeDb.schoolAddress) setSchoolAddress(activeDb.schoolAddress);
-        if (activeDb.reportCardFont) setReportCardFont(activeDb.reportCardFont);
-        if (activeDb.reportCardHeaderFont) setReportCardHeaderFont(activeDb.reportCardHeaderFont);
-        if (activeDb.reportCardHeaderFontSize) setReportCardHeaderFontSize(activeDb.reportCardHeaderFontSize);
-        if (activeDb.adminName) setAdminName(activeDb.adminName);
-        if (activeDb.adminAvatar) setAdminAvatar(activeDb.adminAvatar);
-        if (activeDb.currentSession) setCurrentSession(activeDb.currentSession);
-        if (activeDb.currentTerm) setCurrentTerm(activeDb.currentTerm);
-        if (activeDb.allowStudentReg !== undefined) setAllowStudentReg(activeDb.allowStudentReg);
-        if (activeDb.maintenanceMode !== undefined) setMaintenanceMode(activeDb.maintenanceMode);
-      }
-
-      // 4. Automatically initialize cloud JSONBlob if none exists and we have data
-      if (!savedBlobId) {
-        try {
-          const dbData = activeDb || getFullDatabaseJson();
-          const createRes = await fetch('https://jsonblob.com/api/jsonBlob', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(dbData)
-          });
-          if (createRes.ok) {
-            const newBlobId = createRes.headers.get('X-jsonblob-id');
-            if (newBlobId) {
-              localStorage.setItem('mc_sync_blob_id', newBlobId);
-              setSyncBlobId(newBlobId);
-              console.log('Automatically initialized JSONBlob cloud database sync bin:', newBlobId);
-            }
-          }
-        } catch (e) {
-          console.warn('Failed to initialize JSONBlob cloud database sync bin:', e);
-        }
-      } else if (savedBlobId && !loadedFromCloud) {
-        // Recreate the expired cloud bin with current state
-        try {
-          const dbData = getFullDatabaseJson();
-          const createRes = await fetch('https://jsonblob.com/api/jsonBlob', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(dbData)
-          });
-          if (createRes.ok) {
-            const newBlobId = createRes.headers.get('X-jsonblob-id');
-            if (newBlobId) {
-              localStorage.setItem('mc_sync_blob_id', newBlobId);
-              setSyncBlobId(newBlobId);
-              console.log('Recreated expired JSONBlob cloud database sync bin:', newBlobId);
-            }
-          }
-        } catch (e) {
-          console.warn('Failed to recreate JSONBlob cloud database sync bin:', e);
-        }
-      }
-
-      // Check if local dev server API is active
-      try {
-        const testRes = await fetch('/api/db');
-        if (testRes.ok) {
-          setApiActive(true);
-        }
-      } catch (e) {}
-
-      setIsSynced(true);
-    };
-
-    fetchDb();
-  }, []);
-
-  // Sync when state changes (debounced)
-  useEffect(() => {
-    if (isSynced && (apiActive || syncBlobId)) {
-      const timer = setTimeout(() => {
-        saveToServer();
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [
-    isSynced, apiActive, syncBlobId,
-    classes, subjects, teachers, students, results, auditLogs, gradingScale,
-    adminEmail, adminPassword, schoolName, schoolSubtitle, schoolLogo,
-    schoolMotto, schoolAddress, reportCardFont, reportCardHeaderFont,
-    reportCardHeaderFontSize, adminName, adminAvatar, currentSession,
-    currentTerm, allowStudentReg, maintenanceMode
-  ]);
-
-  const connectCloudSync = async (blobId) => {
-    try {
-      const res = await fetch(`https://jsonblob.com/api/jsonBlob/${blobId}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.classes) setClasses(data.classes);
-        if (data.subjects) setSubjects(data.subjects);
-        if (data.teachers) setTeachers(data.teachers);
-        if (data.students) setStudents(data.students);
-        if (data.results) setResults(data.results);
-        if (data.auditLogs) setAuditLogs(data.auditLogs);
-        if (data.gradingScale) setGradingScale(data.gradingScale);
-        if (data.adminEmail) setAdminEmail(data.adminEmail);
-        if (data.adminPassword) setAdminPassword(data.adminPassword);
-        if (data.schoolName) setSchoolName(data.schoolName);
-        if (data.schoolSubtitle) setSchoolSubtitle(data.schoolSubtitle);
-        if (data.schoolLogo) setSchoolLogo(data.schoolLogo);
-        if (data.schoolMotto) setSchoolMotto(data.schoolMotto);
-        if (data.schoolAddress) setSchoolAddress(data.schoolAddress);
-        if (data.reportCardFont) setReportCardFont(data.reportCardFont);
-        if (data.reportCardHeaderFont) setReportCardHeaderFont(data.reportCardHeaderFont);
-        if (data.reportCardHeaderFontSize) setReportCardHeaderFontSize(data.reportCardHeaderFontSize);
-        if (data.adminName) setAdminName(data.adminName);
-        if (data.adminAvatar) setAdminAvatar(data.adminAvatar);
-        if (data.currentSession) setCurrentSession(data.currentSession);
-        if (data.currentTerm) setCurrentTerm(data.currentTerm);
-        if (data.allowStudentReg !== undefined) setAllowStudentReg(data.allowStudentReg);
-        if (data.maintenanceMode !== undefined) setMaintenanceMode(data.maintenanceMode);
-
-        localStorage.setItem('mc_sync_blob_id', blobId);
-        setSyncBlobId(blobId);
-        return { success: true };
-      } else {
-        return { success: false, error: 'Cloud database key not found.' };
-      }
-    } catch (e) {
-      return { success: false, error: e.message || 'Connection failed.' };
-    }
-  };
-
-  const disconnectCloudSync = () => {
-    localStorage.removeItem('mc_sync_blob_id');
-    setSyncBlobId('');
-  };
-
   const exportDatabase = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(getFullDatabaseJson(), null, 2));
     const downloadAnchor = document.createElement('a');
@@ -1015,43 +781,39 @@ export const AppProvider = ({ children }) => {
     downloadAnchor.remove();
   };
 
-  const importDatabase = (importedJson) => {
+  const importDatabase = async (importedJson) => {
     try {
       const data = typeof importedJson === 'string' ? JSON.parse(importedJson) : importedJson;
       if (!data.classes || !data.students || !data.teachers) {
         throw new Error("Missing core database arrays.");
       }
-      if (data.classes) setClasses(data.classes);
-      if (data.subjects) setSubjects(data.subjects);
-      if (data.teachers) setTeachers(data.teachers);
-      if (data.students) setStudents(data.students);
-      if (data.results) setResults(data.results);
-      if (data.auditLogs) setAuditLogs(data.auditLogs);
-      if (data.gradingScale) setGradingScale(data.gradingScale);
-      if (data.adminEmail) setAdminEmail(data.adminEmail);
-      if (data.adminPassword) setAdminPassword(data.adminPassword);
-      if (data.schoolName) setSchoolName(data.schoolName);
-      if (data.schoolSubtitle) setSchoolSubtitle(data.schoolSubtitle);
-      if (data.schoolLogo) setSchoolLogo(data.schoolLogo);
-      if (data.schoolMotto) setSchoolMotto(data.schoolMotto);
-      if (data.schoolAddress) setSchoolAddress(data.schoolAddress);
-      if (data.reportCardFont) setReportCardFont(data.reportCardFont);
-      if (data.reportCardHeaderFont) setReportCardHeaderFont(data.reportCardHeaderFont);
-      if (data.reportCardHeaderFontSize) setReportCardHeaderFontSize(data.reportCardHeaderFontSize);
-      if (data.adminName) setAdminName(data.adminName);
-      if (data.adminAvatar) setAdminAvatar(data.adminAvatar);
-      if (data.currentSession) setCurrentSession(data.currentSession);
-      if (data.currentTerm) setCurrentTerm(data.currentTerm);
-      if (data.allowStudentReg !== undefined) setAllowStudentReg(data.allowStudentReg);
-      if (data.maintenanceMode !== undefined) setMaintenanceMode(data.maintenanceMode);
 
-      logAction('Imported Database', 'Administrator', 'Full database import executed successfully.');
-      return { success: true };
+      const res = await fetch('/api/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (res.ok) {
+        alert("Database imported successfully! Refreshing browser...");
+        window.location.reload();
+        return { success: true };
+      } else {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to parse import on server.');
+      }
     } catch (e) {
       console.error('Failed to import database:', e);
       return { success: false, error: e.message };
     }
   };
+
+  // Deprecated Cloud Sync hooks (no-op to prevent admin portal page crash)
+  const syncBlobId = '';
+  const connectCloudSync = async () => {
+    return { success: false, error: 'JSONBlob Cloud Sync is deprecated. PostgreSQL database is active.' };
+  };
+  const disconnectCloudSync = () => {};
 
   return (
     <AppContext.Provider
