@@ -737,6 +737,7 @@ export const AppProvider = ({ children }) => {
   // Helper to compile the entire database JSON
   const getFullDatabaseJson = () => {
     return {
+      syncBlobId: localStorage.getItem('mc_sync_blob_id') || syncBlobId,
       classes,
       subjects,
       teachers,
@@ -822,6 +823,21 @@ export const AppProvider = ({ children }) => {
             const data = await res.json();
             if (data.status !== 'no_db') {
               activeDb = data;
+              // If the static database has a sync ID, immediately try to fetch from the cloud
+              // to get any real-time changes that are newer than the static snapshot!
+              if (data.syncBlobId) {
+                try {
+                  const cloudRes = await fetch(`https://jsonblob.com/api/jsonBlob/${data.syncBlobId}`);
+                  if (cloudRes.ok) {
+                    const cloudDb = await cloudRes.json();
+                    activeDb = cloudDb;
+                    loadedFromCloud = true;
+                    console.log('Discovered Sync ID in db.json, successfully loaded latest cloud state.');
+                  }
+                } catch (e) {
+                  console.warn('Failed to fetch from cloud after finding key in db.json:', e);
+                }
+              }
             }
           }
         } catch (err) {
@@ -831,6 +847,10 @@ export const AppProvider = ({ children }) => {
 
       // 3. Load database into state if retrieved
       if (activeDb) {
+        if (activeDb.syncBlobId) {
+          localStorage.setItem('mc_sync_blob_id', activeDb.syncBlobId);
+          setSyncBlobId(activeDb.syncBlobId);
+        }
         if (activeDb.classes) setClasses(activeDb.classes);
         if (activeDb.subjects) setSubjects(activeDb.subjects);
         if (activeDb.teachers) setTeachers(activeDb.teachers);

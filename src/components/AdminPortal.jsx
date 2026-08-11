@@ -71,7 +71,8 @@ export default function AdminPortal() {
     exportDatabase,
     importDatabase,
     syncBlobId,
-    disconnectCloudSync
+    disconnectCloudSync,
+    connectCloudSync
   } = useContext(AppContext);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -97,6 +98,7 @@ export default function AdminPortal() {
   const [oldPasswordInput, setOldPasswordInput] = useState('');
   const [newPasswordInput, setNewPasswordInput] = useState('');
   const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
+  const [pairKeyInput, setPairKeyInput] = useState('');
 
   const [showTeacherPassword, setShowTeacherPassword] = useState(false);
   const [showOldPassword, setShowOldPassword] = useState(false);
@@ -2434,6 +2436,42 @@ export default function AdminPortal() {
                         </button>
                       </div>
                     )}
+
+                    {/* Pair/Link Input */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '1rem', marginTop: '0.5rem' }}>
+                      <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-primary)' }}>Pair with Another Device</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Enter another device's Sync Key to connect both devices to the same cloud database:</span>
+                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+                        <input
+                          type="text"
+                          placeholder="e.g. 019fecfc-a233-7537-baa6-b9e6875f9def"
+                          value={pairKeyInput}
+                          onChange={(e) => setPairKeyInput(e.target.value)}
+                          className="form-control"
+                          style={{ fontSize: '0.8rem', padding: '0.4rem 0.6rem', flex: 1 }}
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-primary"
+                          onClick={async () => {
+                            if (!pairKeyInput.trim()) {
+                              alert('Please enter a valid Cloud Sync Key.');
+                              return;
+                            }
+                            const result = await connectCloudSync(pairKeyInput.trim());
+                            if (result.success) {
+                              alert('Real-time sync established successfully! Database has been updated. The portal will now reload.');
+                              window.location.reload();
+                            } else {
+                              alert(`Error: ${result.error}`);
+                            }
+                          }}
+                          style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+                        >
+                          Link Devices
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
