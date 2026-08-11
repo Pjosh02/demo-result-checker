@@ -67,7 +67,9 @@ export default function AdminPortal() {
     reportCardHeaderFont,
     setReportCardHeaderFont,
     reportCardHeaderFontSize,
-    setReportCardHeaderFontSize
+    setReportCardHeaderFontSize,
+    exportDatabase,
+    importDatabase
   } = useContext(AppContext);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -2164,6 +2166,80 @@ export default function AdminPortal() {
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Replaces student search page with a maintenance message when compiling term details.</span>
                     </div>
                   </label>
+                </div>
+              </div>
+
+              {/* Database Backup & Synchronization Panel */}
+              <div className="glass-panel" style={{ padding: '1.75rem', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <h3 style={{ fontSize: '1.15rem', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                  </svg>
+                  Database Synchronization
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+                  Synchronize your students list, teacher accounts, and compiled academic marks between different devices (e.g. laptop and mobile).
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}>
+                  {/* Export Button */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+                    <div>
+                      <span style={{ fontWeight: 600, fontSize: '0.9rem', display: 'block' }}>Export Database</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Download full database configuration as a JSON file.</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={exportDatabase}
+                      style={{ flexShrink: 0, padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                    >
+                      Export JSON
+                    </button>
+                  </div>
+
+                  {/* Import Button */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                    <div>
+                      <span style={{ fontWeight: 600, fontSize: '0.9rem', display: 'block' }}>Import Database</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Restore or merge data from a previously exported JSON backup file.</span>
+                    </div>
+                    <label
+                      className="btn btn-primary"
+                      style={{
+                        flexShrink: 0,
+                        padding: '0.5rem 1rem',
+                        fontSize: '0.85rem',
+                        cursor: 'pointer',
+                        display: 'inline-block',
+                        textAlign: 'center',
+                        margin: 0
+                      }}
+                    >
+                      Import JSON
+                      <input
+                        type="file"
+                        accept=".json"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (uploadEvent) => {
+                              const result = importDatabase(uploadEvent.target.result);
+                              if (result.success) {
+                                alert('Database imported successfully! The portal will now reload to apply all changes.');
+                                window.location.reload();
+                              } else {
+                                alert(`Error: Failed to import database. ${result.error}`);
+                              }
+                            };
+                            reader.readAsText(file);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>

@@ -727,6 +727,168 @@ export const AppProvider = ({ children }) => {
     };
   };
 
+  // Server Database Sync State
+  const [isSynced, setIsSynced] = useState(false);
+  const [apiActive, setApiActive] = useState(false);
+
+  // Helper to compile the entire database JSON
+  const getFullDatabaseJson = () => {
+    return {
+      classes,
+      subjects,
+      teachers,
+      students,
+      results,
+      auditLogs,
+      gradingScale,
+      adminEmail,
+      adminPassword,
+      schoolName,
+      schoolSubtitle,
+      schoolLogo,
+      schoolMotto,
+      schoolAddress,
+      reportCardFont,
+      reportCardHeaderFont,
+      reportCardHeaderFontSize,
+      adminName,
+      adminAvatar,
+      currentSession,
+      currentTerm,
+      allowStudentReg,
+      maintenanceMode
+    };
+  };
+
+  const saveToServer = async () => {
+    try {
+      const dbData = getFullDatabaseJson();
+      await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dbData)
+      });
+    } catch (e) {
+      console.error('Failed to sync changes to server:', e);
+    }
+  };
+
+  // Sync from server on mount
+  useEffect(() => {
+    const fetchDb = async () => {
+      try {
+        const res = await fetch('/api/db');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === 'no_db') {
+            setApiActive(true);
+            const dbData = getFullDatabaseJson();
+            await fetch('/api/db', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(dbData)
+            });
+          } else {
+            if (data.classes) setClasses(data.classes);
+            if (data.subjects) setSubjects(data.subjects);
+            if (data.teachers) setTeachers(data.teachers);
+            if (data.students) setStudents(data.students);
+            if (data.results) setResults(data.results);
+            if (data.auditLogs) setAuditLogs(data.auditLogs);
+            if (data.gradingScale) setGradingScale(data.gradingScale);
+            if (data.adminEmail) setAdminEmail(data.adminEmail);
+            if (data.adminPassword) setAdminPassword(data.adminPassword);
+            if (data.schoolName) setSchoolName(data.schoolName);
+            if (data.schoolSubtitle) setSchoolSubtitle(data.schoolSubtitle);
+            if (data.schoolLogo) setSchoolLogo(data.schoolLogo);
+            if (data.schoolMotto) setSchoolMotto(data.schoolMotto);
+            if (data.schoolAddress) setSchoolAddress(data.schoolAddress);
+            if (data.reportCardFont) setReportCardFont(data.reportCardFont);
+            if (data.reportCardHeaderFont) setReportCardHeaderFont(data.reportCardHeaderFont);
+            if (data.reportCardHeaderFontSize) setReportCardHeaderFontSize(data.reportCardHeaderFontSize);
+            if (data.adminName) setAdminName(data.adminName);
+            if (data.adminAvatar) setAdminAvatar(data.adminAvatar);
+            if (data.currentSession) setCurrentSession(data.currentSession);
+            if (data.currentTerm) setCurrentTerm(data.currentTerm);
+            if (data.allowStudentReg !== undefined) setAllowStudentReg(data.allowStudentReg);
+            if (data.maintenanceMode !== undefined) setMaintenanceMode(data.maintenanceMode);
+            setApiActive(true);
+          }
+        }
+      } catch (err) {
+        console.warn('Vite API sync not available, falling back to localStorage.', err);
+      } finally {
+        setIsSynced(true);
+      }
+    };
+    fetchDb();
+  }, []);
+
+  // Sync to server when DB state changes (debounced)
+  useEffect(() => {
+    if (isSynced && apiActive) {
+      const timer = setTimeout(() => {
+        saveToServer();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [
+    isSynced, apiActive,
+    classes, subjects, teachers, students, results, auditLogs, gradingScale,
+    adminEmail, adminPassword, schoolName, schoolSubtitle, schoolLogo,
+    schoolMotto, schoolAddress, reportCardFont, reportCardHeaderFont,
+    reportCardHeaderFontSize, adminName, adminAvatar, currentSession,
+    currentTerm, allowStudentReg, maintenanceMode
+  ]);
+
+  const exportDatabase = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(getFullDatabaseJson(), null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `higgsfield_db_${Date.now()}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
+  const importDatabase = (importedJson) => {
+    try {
+      const data = typeof importedJson === 'string' ? JSON.parse(importedJson) : importedJson;
+      if (!data.classes || !data.students || !data.teachers) {
+        throw new Error("Missing core database arrays.");
+      }
+      if (data.classes) setClasses(data.classes);
+      if (data.subjects) setSubjects(data.subjects);
+      if (data.teachers) setTeachers(data.teachers);
+      if (data.students) setStudents(data.students);
+      if (data.results) setResults(data.results);
+      if (data.auditLogs) setAuditLogs(data.auditLogs);
+      if (data.gradingScale) setGradingScale(data.gradingScale);
+      if (data.adminEmail) setAdminEmail(data.adminEmail);
+      if (data.adminPassword) setAdminPassword(data.adminPassword);
+      if (data.schoolName) setSchoolName(data.schoolName);
+      if (data.schoolSubtitle) setSchoolSubtitle(data.schoolSubtitle);
+      if (data.schoolLogo) setSchoolLogo(data.schoolLogo);
+      if (data.schoolMotto) setSchoolMotto(data.schoolMotto);
+      if (data.schoolAddress) setSchoolAddress(data.schoolAddress);
+      if (data.reportCardFont) setReportCardFont(data.reportCardFont);
+      if (data.reportCardHeaderFont) setReportCardHeaderFont(data.reportCardHeaderFont);
+      if (data.reportCardHeaderFontSize) setReportCardHeaderFontSize(data.reportCardHeaderFontSize);
+      if (data.adminName) setAdminName(data.adminName);
+      if (data.adminAvatar) setAdminAvatar(data.adminAvatar);
+      if (data.currentSession) setCurrentSession(data.currentSession);
+      if (data.currentTerm) setCurrentTerm(data.currentTerm);
+      if (data.allowStudentReg !== undefined) setAllowStudentReg(data.allowStudentReg);
+      if (data.maintenanceMode !== undefined) setMaintenanceMode(data.maintenanceMode);
+
+      logAction('Imported Database', 'Administrator', 'Full database import executed successfully.');
+      return { success: true };
+    } catch (e) {
+      console.error('Failed to import database:', e);
+      return { success: false, error: e.message };
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -812,7 +974,9 @@ export const AppProvider = ({ children }) => {
         reportCardHeaderFont,
         setReportCardHeaderFont,
         reportCardHeaderFontSize,
-        setReportCardHeaderFontSize
+        setReportCardHeaderFontSize,
+        exportDatabase,
+        importDatabase
       }}
     >
       {children}
