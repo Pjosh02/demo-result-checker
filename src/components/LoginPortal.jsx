@@ -28,6 +28,7 @@ export default function LoginPortal() {
   // Staff Form Inputs
   const [staffEmail, setStaffEmail] = useState('');
   const [staffPassword, setStaffPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   // Common UI states
   const [errorMsg, setErrorMsg] = useState('');
@@ -428,19 +429,54 @@ export default function LoginPortal() {
 
               <div className="form-group">
                 <label htmlFor="staffPass">Password</label>
-                <input
-                  id="staffPass"
-                  type="password"
-                  className="form-control"
-                  placeholder="••••••••"
-                  value={staffPassword}
-                  onChange={(e) => setStaffPassword(e.target.value)}
-                  autoComplete="current-password"
-                  autoCorrect="off"
-                  autoCapitalize="none"
-                  spellCheck="false"
-                  required
-                />
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    id="staffPass"
+                    type={showPassword ? 'text' : 'password'}
+                    className="form-control"
+                    placeholder="••••••••"
+                    value={staffPassword}
+                    onChange={(e) => setStaffPassword(e.target.value)}
+                    autoComplete="current-password"
+                    autoCorrect="off"
+                    autoCapitalize="none"
+                    spellCheck="false"
+                    required
+                    style={{ width: '100%', paddingRight: '2.5rem' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '0.75rem',
+                      background: 'none',
+                      border: 'none',
+                      padding: '0.25rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--text-secondary)',
+                      opacity: 0.7,
+                      transition: 'opacity 0.2s ease'
+                    }}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
+                    onMouseLeave={(e) => e.currentTarget.style.opacity = 0.7}
+                  >
+                    {showPassword ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.025 10.025 0 014.132-5.4M9.88 9.88a3 3 0 104.24 4.24M3 3l18 18" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
 
               <button
