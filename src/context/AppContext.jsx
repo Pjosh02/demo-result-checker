@@ -777,7 +777,7 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     const fetchDb = async () => {
       try {
-        const res = await fetch('/api/db');
+        const res = await fetch('/db.json');
         if (res.ok) {
           const data = await res.json();
           if (data.status === 'no_db') {
