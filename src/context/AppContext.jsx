@@ -24,6 +24,24 @@ const defaultGradingScale = [
 ];
 
 export const AppProvider = ({ children }) => {
+  // Clear stale localStorage data from older Manna Academy schema/credentials
+  const CURRENT_DB_VERSION = 'v2_higgsfield';
+  const savedVersion = localStorage.getItem('mc_db_version');
+  if (savedVersion !== CURRENT_DB_VERSION) {
+    const keysToRemove = [
+      'mc_classes', 'mc_subjects', 'mc_teachers', 'mc_students', 'mc_results',
+      'mc_audit_logs', 'mc_grading_scale', 'mc_failed_attempts', 'mc_lockout_until',
+      'mc_selected_teacher_id', 'mc_teacher_logged_in', 'mc_admin_password',
+      'mc_admin_email', 'mc_school_name', 'mc_school_subtitle', 'mc_school_logo',
+      'mc_school_motto', 'mc_school_address', 'mc_report_card_font',
+      'mc_report_card_header_font', 'mc_report_card_header_font_size',
+      'mc_admin_name', 'mc_admin_avatar', 'mc_current_session', 'mc_current_term',
+      'mc_allow_student_reg', 'mc_maintenance_mode'
+    ];
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    localStorage.setItem('mc_db_version', CURRENT_DB_VERSION);
+  }
+
   // Load from local storage or fallback to mock seed data
   const [classes, setClasses] = useState(() => {
     const saved = localStorage.getItem('mc_classes');
