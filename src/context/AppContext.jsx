@@ -730,6 +730,9 @@ export const AppProvider = ({ children }) => {
   // Server Database Sync State
   const [isSynced, setIsSynced] = useState(false);
   const [apiActive, setApiActive] = useState(false);
+  const [syncBlobId, setSyncBlobId] = useState(() => {
+    return localStorage.getItem('mc_sync_blob_id') || '';
+  });
 
   // Helper to compile the entire database JSON
   const getFullDatabaseJson = () => {
@@ -761,85 +764,215 @@ export const AppProvider = ({ children }) => {
   };
 
   const saveToServer = async () => {
-    try {
-      const dbData = getFullDatabaseJson();
-      await fetch('/api/db', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dbData)
-      });
-    } catch (e) {
-      console.error('Failed to sync changes to server:', e);
+    const dbData = getFullDatabaseJson();
+    if (apiActive) {
+      try {
+        await fetch('/api/db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(dbData)
+        });
+      } catch (e) {
+        console.error('Failed to sync changes to local server:', e);
+      }
+    }
+
+    const savedBlobId = localStorage.getItem('mc_sync_blob_id') || syncBlobId;
+    if (savedBlobId) {
+      try {
+        await fetch(`https://jsonblob.com/api/jsonBlob/${savedBlobId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(dbData)
+        });
+      } catch (e) {
+        console.error('Failed to sync changes to JSONBlob cloud store:', e);
+      }
     }
   };
 
-  // Sync from server on mount
+  // Sync from server/cloud on mount
   useEffect(() => {
     const fetchDb = async () => {
-      try {
-        const res = await fetch('/db.json');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.status === 'no_db') {
-            setApiActive(true);
-            const dbData = getFullDatabaseJson();
-            await fetch('/api/db', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(dbData)
-            });
-          } else {
-            if (data.classes) setClasses(data.classes);
-            if (data.subjects) setSubjects(data.subjects);
-            if (data.teachers) setTeachers(data.teachers);
-            if (data.students) setStudents(data.students);
-            if (data.results) setResults(data.results);
-            if (data.auditLogs) setAuditLogs(data.auditLogs);
-            if (data.gradingScale) setGradingScale(data.gradingScale);
-            if (data.adminEmail) setAdminEmail(data.adminEmail);
-            if (data.adminPassword) setAdminPassword(data.adminPassword);
-            if (data.schoolName) setSchoolName(data.schoolName);
-            if (data.schoolSubtitle) setSchoolSubtitle(data.schoolSubtitle);
-            if (data.schoolLogo) setSchoolLogo(data.schoolLogo);
-            if (data.schoolMotto) setSchoolMotto(data.schoolMotto);
-            if (data.schoolAddress) setSchoolAddress(data.schoolAddress);
-            if (data.reportCardFont) setReportCardFont(data.reportCardFont);
-            if (data.reportCardHeaderFont) setReportCardHeaderFont(data.reportCardHeaderFont);
-            if (data.reportCardHeaderFontSize) setReportCardHeaderFontSize(data.reportCardHeaderFontSize);
-            if (data.adminName) setAdminName(data.adminName);
-            if (data.adminAvatar) setAdminAvatar(data.adminAvatar);
-            if (data.currentSession) setCurrentSession(data.currentSession);
-            if (data.currentTerm) setCurrentTerm(data.currentTerm);
-            if (data.allowStudentReg !== undefined) setAllowStudentReg(data.allowStudentReg);
-            if (data.maintenanceMode !== undefined) setMaintenanceMode(data.maintenanceMode);
-            setApiActive(true);
+      let activeDb = null;
+      let loadedFromCloud = false;
+
+      // 1. Try to fetch from JSONBlob Cloud Sync
+      const savedBlobId = localStorage.getItem('mc_sync_blob_id') || syncBlobId;
+      if (savedBlobId) {
+        try {
+          const cloudRes = await fetch(`https://jsonblob.com/api/jsonBlob/${savedBlobId}`);
+          if (cloudRes.ok) {
+            activeDb = await cloudRes.json();
+            loadedFromCloud = true;
+            console.log('Successfully synchronized database from JSONBlob cloud store.');
+          } else if (cloudRes.status === 404) {
+            console.warn('Cloud sync bin was deleted or expired.');
           }
+        } catch (e) {
+          console.warn('Failed to fetch from JSONBlob cloud store:', e);
         }
-      } catch (err) {
-        console.warn('Vite API sync not available, falling back to localStorage.', err);
-      } finally {
-        setIsSynced(true);
       }
+
+      // 2. Fallback: Fetch from /db.json (static build / local dev server)
+      if (!activeDb) {
+        try {
+          const res = await fetch('/db.json');
+          if (res.ok) {
+            const data = await res.json();
+            if (data.status !== 'no_db') {
+              activeDb = data;
+            }
+          }
+        } catch (err) {
+          console.warn('Vite static /db.json asset not available:', err);
+        }
+      }
+
+      // 3. Load database into state if retrieved
+      if (activeDb) {
+        if (activeDb.classes) setClasses(activeDb.classes);
+        if (activeDb.subjects) setSubjects(activeDb.subjects);
+        if (activeDb.teachers) setTeachers(activeDb.teachers);
+        if (activeDb.students) setStudents(activeDb.students);
+        if (activeDb.results) setResults(activeDb.results);
+        if (activeDb.auditLogs) setAuditLogs(activeDb.auditLogs);
+        if (activeDb.gradingScale) setGradingScale(activeDb.gradingScale);
+        if (activeDb.adminEmail) setAdminEmail(activeDb.adminEmail);
+        if (activeDb.adminPassword) setAdminPassword(activeDb.adminPassword);
+        if (activeDb.schoolName) setSchoolName(activeDb.schoolName);
+        if (activeDb.schoolSubtitle) setSchoolSubtitle(activeDb.schoolSubtitle);
+        if (activeDb.schoolLogo) setSchoolLogo(activeDb.schoolLogo);
+        if (activeDb.schoolMotto) setSchoolMotto(activeDb.schoolMotto);
+        if (activeDb.schoolAddress) setSchoolAddress(activeDb.schoolAddress);
+        if (activeDb.reportCardFont) setReportCardFont(activeDb.reportCardFont);
+        if (activeDb.reportCardHeaderFont) setReportCardHeaderFont(activeDb.reportCardHeaderFont);
+        if (activeDb.reportCardHeaderFontSize) setReportCardHeaderFontSize(activeDb.reportCardHeaderFontSize);
+        if (activeDb.adminName) setAdminName(activeDb.adminName);
+        if (activeDb.adminAvatar) setAdminAvatar(activeDb.adminAvatar);
+        if (activeDb.currentSession) setCurrentSession(activeDb.currentSession);
+        if (activeDb.currentTerm) setCurrentTerm(activeDb.currentTerm);
+        if (activeDb.allowStudentReg !== undefined) setAllowStudentReg(activeDb.allowStudentReg);
+        if (activeDb.maintenanceMode !== undefined) setMaintenanceMode(activeDb.maintenanceMode);
+      }
+
+      // 4. Automatically initialize cloud JSONBlob if none exists and we have data
+      if (!savedBlobId) {
+        try {
+          const dbData = activeDb || getFullDatabaseJson();
+          const createRes = await fetch('https://jsonblob.com/api/jsonBlob', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dbData)
+          });
+          if (createRes.ok) {
+            const newBlobId = createRes.headers.get('X-jsonblob-id');
+            if (newBlobId) {
+              localStorage.setItem('mc_sync_blob_id', newBlobId);
+              setSyncBlobId(newBlobId);
+              console.log('Automatically initialized JSONBlob cloud database sync bin:', newBlobId);
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to initialize JSONBlob cloud database sync bin:', e);
+        }
+      } else if (savedBlobId && !loadedFromCloud) {
+        // Recreate the expired cloud bin with current state
+        try {
+          const dbData = getFullDatabaseJson();
+          const createRes = await fetch('https://jsonblob.com/api/jsonBlob', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dbData)
+          });
+          if (createRes.ok) {
+            const newBlobId = createRes.headers.get('X-jsonblob-id');
+            if (newBlobId) {
+              localStorage.setItem('mc_sync_blob_id', newBlobId);
+              setSyncBlobId(newBlobId);
+              console.log('Recreated expired JSONBlob cloud database sync bin:', newBlobId);
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to recreate JSONBlob cloud database sync bin:', e);
+        }
+      }
+
+      // Check if local dev server API is active
+      try {
+        const testRes = await fetch('/api/db');
+        if (testRes.ok) {
+          setApiActive(true);
+        }
+      } catch (e) {}
+
+      setIsSynced(true);
     };
+
     fetchDb();
   }, []);
 
-  // Sync to server when DB state changes (debounced)
+  // Sync when state changes (debounced)
   useEffect(() => {
-    if (isSynced && apiActive) {
+    if (isSynced && (apiActive || syncBlobId)) {
       const timer = setTimeout(() => {
         saveToServer();
       }, 500);
       return () => clearTimeout(timer);
     }
   }, [
-    isSynced, apiActive,
+    isSynced, apiActive, syncBlobId,
     classes, subjects, teachers, students, results, auditLogs, gradingScale,
     adminEmail, adminPassword, schoolName, schoolSubtitle, schoolLogo,
     schoolMotto, schoolAddress, reportCardFont, reportCardHeaderFont,
     reportCardHeaderFontSize, adminName, adminAvatar, currentSession,
     currentTerm, allowStudentReg, maintenanceMode
   ]);
+
+  const connectCloudSync = async (blobId) => {
+    try {
+      const res = await fetch(`https://jsonblob.com/api/jsonBlob/${blobId}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.classes) setClasses(data.classes);
+        if (data.subjects) setSubjects(data.subjects);
+        if (data.teachers) setTeachers(data.teachers);
+        if (data.students) setStudents(data.students);
+        if (data.results) setResults(data.results);
+        if (data.auditLogs) setAuditLogs(data.auditLogs);
+        if (data.gradingScale) setGradingScale(data.gradingScale);
+        if (data.adminEmail) setAdminEmail(data.adminEmail);
+        if (data.adminPassword) setAdminPassword(data.adminPassword);
+        if (data.schoolName) setSchoolName(data.schoolName);
+        if (data.schoolSubtitle) setSchoolSubtitle(data.schoolSubtitle);
+        if (data.schoolLogo) setSchoolLogo(data.schoolLogo);
+        if (data.schoolMotto) setSchoolMotto(data.schoolMotto);
+        if (data.schoolAddress) setSchoolAddress(data.schoolAddress);
+        if (data.reportCardFont) setReportCardFont(data.reportCardFont);
+        if (data.reportCardHeaderFont) setReportCardHeaderFont(data.reportCardHeaderFont);
+        if (data.reportCardHeaderFontSize) setReportCardHeaderFontSize(data.reportCardHeaderFontSize);
+        if (data.adminName) setAdminName(data.adminName);
+        if (data.adminAvatar) setAdminAvatar(data.adminAvatar);
+        if (data.currentSession) setCurrentSession(data.currentSession);
+        if (data.currentTerm) setCurrentTerm(data.currentTerm);
+        if (data.allowStudentReg !== undefined) setAllowStudentReg(data.allowStudentReg);
+        if (data.maintenanceMode !== undefined) setMaintenanceMode(data.maintenanceMode);
+
+        localStorage.setItem('mc_sync_blob_id', blobId);
+        setSyncBlobId(blobId);
+        return { success: true };
+      } else {
+        return { success: false, error: 'Cloud database key not found.' };
+      }
+    } catch (e) {
+      return { success: false, error: e.message || 'Connection failed.' };
+    }
+  };
+
+  const disconnectCloudSync = () => {
+    localStorage.removeItem('mc_sync_blob_id');
+    setSyncBlobId('');
+  };
 
   const exportDatabase = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(getFullDatabaseJson(), null, 2));
@@ -976,7 +1109,10 @@ export const AppProvider = ({ children }) => {
         reportCardHeaderFontSize,
         setReportCardHeaderFontSize,
         exportDatabase,
-        importDatabase
+        importDatabase,
+        syncBlobId,
+        connectCloudSync,
+        disconnectCloudSync
       }}
     >
       {children}

@@ -69,7 +69,9 @@ export default function AdminPortal() {
     reportCardHeaderFontSize,
     setReportCardHeaderFontSize,
     exportDatabase,
-    importDatabase
+    importDatabase,
+    syncBlobId,
+    disconnectCloudSync
   } = useContext(AppContext);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -2384,6 +2386,54 @@ export default function AdminPortal() {
                         }}
                       />
                     </label>
+                  </div>
+
+                  {/* Real-time Cloud Sync Key */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+                      <div>
+                        <span style={{ fontWeight: 600, fontSize: '0.9rem', display: 'block' }}>Real-time Cloud Sync Key</span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Use this key on your other devices (e.g. mobile) to pair them.</span>
+                      </div>
+                      {syncBlobId ? (
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          onClick={() => {
+                            if (confirm('Are you sure you want to disable real-time sync on this device?')) {
+                              disconnectCloudSync();
+                            }
+                          }}
+                          style={{ flexShrink: 0, padding: '0.5rem 1rem', fontSize: '0.85rem', borderColor: '#ef4444', color: '#ef4444' }}
+                        >
+                          Disconnect
+                        </button>
+                      ) : (
+                        <span style={{ fontSize: '0.8rem', color: '#f59e0b', fontWeight: 500 }}>Not Active</span>
+                      )}
+                    </div>
+                    {syncBlobId && (
+                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+                        <input
+                          type="text"
+                          readOnly
+                          value={syncBlobId}
+                          className="form-control"
+                          style={{ fontFamily: 'monospace', fontSize: '0.8rem', padding: '0.4rem 0.6rem', backgroundColor: 'var(--bg-tertiary)' }}
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          onClick={() => {
+                            navigator.clipboard.writeText(syncBlobId);
+                            alert('Cloud Sync Key copied to clipboard!');
+                          }}
+                          style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+                        >
+                          Copy Key
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
